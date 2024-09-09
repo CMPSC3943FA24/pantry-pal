@@ -5,9 +5,13 @@ on:
   push:
     branches:
       - prod
+      - qa
+      - dev
   pull_request:
     branches:
       - prod
+      - qa
+      - dev
 
 jobs:
   build:
