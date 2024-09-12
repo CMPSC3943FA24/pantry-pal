@@ -1,0 +1,12 @@
+services:
+  expo-dev:
+    build:
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./app:/app  # Mount the 'app' folder to '/app' inside the container
+    ports:
+      - "19000:19000"
+      - "19001:19001"
+    command: tail -f /dev/null  # Keep the container running without auto-starting the server
+volumes:
+  code: {}
