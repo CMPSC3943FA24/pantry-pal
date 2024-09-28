@@ -14,7 +14,7 @@ export default function App() {
       <Text style={styles.subtext}>Supper</Text>
       <Text style={styles.subtext}>Dessert</Text>
       <Text style={styles.subtext}>Snacks</Text>
-      <Text style={styles.subtext}>Lovcation</Text>
+      <Text style={styles.subtext}>Location</Text>
     </View>
   );
 }
