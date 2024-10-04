@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { initializeDatabase, getCategories, getPantryItems, addPantryItem, getLocations, Location } from './databaseService'; // Import Location from databaseService
+import { initializeDatabase, getCategories, getPantryItems, addPantryItem, getLocations, Location, deletePantryItem } from './databaseService'; // Import Location from databaseService
 import { styles } from './styles';
 
 // Define the type for PantryItem
@@ -21,25 +21,19 @@ interface Category {
 }
 
 export default function App() {
-  // State to manage pantry items
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
-
-  // State to manage categories, assuming categories are fetched from the database
   const [categories, setCategories] = useState<Category[]>([]);
-
-  // State to manage the locations
-  const [locations, setLocations] = useState<Location[]>([]); 
-
-  // State to control modal visibility
+  const [locations, setLocations] = useState<Location[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // Added delete modal visibility state
+  const [itemName, setItemName] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [location, setLocation] = useState<number | null>(null);
+  const [expirationDate, setExpirationDate] = useState('');
+  const [quantity, setQuantity] = useState(0);
+  const [notes, setNotes] = useState('');
+  const [itemId, setItemId] = useState<number | null>(null); // Added state for selected item to delete
 
-  // States for form inputs
-  const [itemName, setItemName] = useState('');  // Item name input
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);  // Category selected by the user
-  const [location, setLocation] = useState<number | null>(null);  // Location: 1 for Fridge, 2 for Freezer, 3 for Pantry
-  const [expirationDate, setExpirationDate] = useState('');  // Expiration date input
-  const [quantity, setQuantity] = useState(0);  // Quantity of the item
-  const [notes, setNotes] = useState('');  // Additional notes input
 
   // useEffect to initialize the database and fetch items/categories on component mount
   useEffect(() => {
@@ -62,12 +56,11 @@ export default function App() {
   };
 
   // Fetch locations from the Locations table
-    const fetchLocations = () => {
-      const fetchedLocations = getLocations();
-      setLocations(fetchedLocations);
-    };
+  const fetchLocations = () => {
+    const fetchedLocations = getLocations();
+    setLocations(fetchedLocations);
+  };
 
-  // Function to add a new item to the pantry
   const handleAddItem = () => {
     if (selectedCategoryId === null || location === null || !itemName || !expirationDate || quantity <= 0) {
       console.error('Required fields are missing or invalid');
@@ -75,18 +68,42 @@ export default function App() {
     }
 
     try {
-      // Call addPantryItem from databaseService with the necessary parameters
       addPantryItem(itemName, location, 0, 0, expirationDate, quantity, new Date().toISOString(), notes);
       console.log('Item added successfully');
     } catch (error) {
       console.error('Error adding item:', error);
     }
 
-    // Refresh the pantry items list after adding the new item
     fetchPantryItems();
-
-    // Close the modal and reset form fields
     setModalVisible(false);
+    resetFormFields();
+  };
+
+  const handleDeleteItem = (id: number) => {
+    try {
+      deletePantryItem(id);
+      console.log('Item deleted successfully');
+      setPantryItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      setDeleteModalVisible(false);
+      setItemId(null);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
+  const confirmDeleteItem = (id: number) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this item?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => handleDeleteItem(id) },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const resetFormFields = () => {
     setItemName('');
     setLocation(null);
     setSelectedCategoryId(null);
@@ -109,6 +126,10 @@ export default function App() {
       <Text style={[styles.badge, item.category_id === 1 ? styles.fridgeBadge : item.category_id === 2 ? styles.freezerBadge : styles.pantryBadge]}>
         {item.category_id === 1 ? 'Fridge' : item.category_id === 2 ? 'Freezer' : 'Pantry'}
       </Text>
+      {/* Delete button that shows a confirmation prompt */}
+      <TouchableOpacity onPress={() => confirmDeleteItem(item.id)}>
+        <Text style={{ color: 'red' }}>Delete</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -140,6 +161,9 @@ export default function App() {
 
       {/* Button to add a new item */}
       <Button title="Add Item" onPress={() => setModalVisible(true)} />
+      
+      {/* Button to delete an item */}
+      <Button title="Delete Item" onPress={() => setDeleteModalVisible(true)} />
 
       {/* List of recent items */}
       <ScrollView contentContainerStyle={styles.recentItemsContainer}>
@@ -237,6 +261,32 @@ export default function App() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal for deleting an item via Picker */}
+      <Modal animationType="slide" transparent={true} visible={deleteModalVisible} onRequestClose={() => setDeleteModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete Pantry Item</Text>
+            <Text>Select an item to delete:</Text>
+            <Picker selectedValue={itemId} onValueChange={(value) => setItemId(value)}>
+              <Picker.Item label="Select an Item" value={null} />
+              {pantryItems.map((item) => (
+                <Picker.Item key={item.id} label={item.name} value={item.id} />
+              ))}
+            </Picker>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => itemId !== null && handleDeleteItem(itemId)} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.cancelButton}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
     </SafeAreaView>
   );
 }
