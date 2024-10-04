@@ -136,7 +136,12 @@ export default function App() {
         {pantryItems.length === 0 ? (
           <Text style={styles.noItemsText}>No items in pantry</Text>
         ) : (
-          pantryItems.map((item) => renderPantryItem({ item }))
+          pantryItems.map((item) => (
+            // Ensure a unique key is provided for each item
+            <View key={item.id}>
+              {renderPantryItem({ item })}
+            </View>
+          ))
         )}
       </ScrollView>
 
@@ -158,25 +163,22 @@ export default function App() {
             {/* Category Dropdown */}
             <Text>Category</Text>
             <ModalDropdown
-              options={[
-                'Dairy', 'Meat', 'Vegetables', 'Fruits', 'Grains', 'Snacks', 'Frozen Foods', 'Condiments',
-                'Beverages', 'Canned Goods', 'Baking Goods', 'Seafood', 'Spices'
-              ]}  // Expanded list of food categories
+              options={categories.map(category => category.name)}  // Use names from your fetched data
               style={styles.dropdown}
               dropdownStyle={styles.dropdownMenu}
               textStyle={styles.dropdownText}
-              onSelect={(index, value) => setSelectedCategoryId(index + 1)}  // Set category based on selection
+              onSelect={(index, value) => setSelectedCategoryId(categories[index].id)}  // Set category ID based on selection
               defaultValue="Select a Category"
             />
 
             {/* Location Dropdown */}
             <Text>Location</Text>
             <ModalDropdown
-              options={['Fridge', 'Freezer', 'Pantry']}  // List of locations
+              options={['Fridge', 'Freezer', 'Pantry']}
               style={styles.dropdown}
               dropdownStyle={styles.dropdownMenu}
               textStyle={styles.dropdownText}
-              onSelect={(index, value) => setLocation(index + 1)}  // Set location based on selection
+              onSelect={(index, value) => setLocation(index + 1)}
               defaultValue="Select a Location"
             />
 
@@ -344,7 +346,6 @@ const styles = StyleSheet.create({
   },
   dropdownMenu: {
     width: '85%',
-    maxHeight: 200,  // Increased height for dropdown menu
   },
   dropdownText: {
     fontSize: 16,
@@ -367,5 +368,3 @@ const styles = StyleSheet.create({
     color: 'white',
   },
 });
-
-export default App;
