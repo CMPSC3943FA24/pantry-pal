@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
-import ModalDropdown from 'react-native-modal-dropdown';  // Import ModalDropdown for dropdown menus
-import { initializeDatabase, getCategories, getPantryItems, addPantryItem } from './databaseService'; // Database service functions
+import { View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { initializeDatabase, getCategories, getPantryItems, addPantryItem, getLocations, Location } from './databaseService'; // Import Location from databaseService
+import { styles } from './styles';
 
 // Define the type for PantryItem
 interface PantryItem {
@@ -13,7 +14,7 @@ interface PantryItem {
   notes: string;
 }
 
-// Define the type for Category (optional if you're using categories separately)
+// Define the type for Category
 interface Category {
   id: number;
   name: string;
@@ -25,6 +26,9 @@ export default function App() {
 
   // State to manage categories, assuming categories are fetched from the database
   const [categories, setCategories] = useState<Category[]>([]);
+
+  // State to manage the locations
+  const [locations, setLocations] = useState<Location[]>([]); 
 
   // State to control modal visibility
   const [modalVisible, setModalVisible] = useState(false);
@@ -41,7 +45,8 @@ export default function App() {
   useEffect(() => {
     initializeDatabase();  // Initialize database when app starts
     fetchPantryItems();  // Fetch pantry items from the database
-    fetchCategories();  // Fetch categories from the database (optional)
+    fetchCategories();  // Fetch categories from the database
+    fetchLocations(); // Fetch locations from the database
   }, []);
 
   // Function to fetch all pantry items from the database
@@ -55,6 +60,12 @@ export default function App() {
     const fetchedCategories = getCategories();
     setCategories(fetchedCategories); // Update state with fetched categories
   };
+
+  // Fetch locations from the Locations table
+    const fetchLocations = () => {
+      const fetchedLocations = getLocations();
+      setLocations(fetchedLocations);
+    };
 
   // Function to add a new item to the pantry
   const handleAddItem = () => {
@@ -160,27 +171,31 @@ export default function App() {
               style={styles.input}
             />
 
-            {/* Category Dropdown */}
+            {/* Category Picker */}
             <Text>Category</Text>
-            <ModalDropdown
-              options={categories.map(category => category.name)}  // Use names from your fetched data
-              style={styles.dropdown}
-              dropdownStyle={styles.dropdownMenu}
-              textStyle={styles.dropdownText}
-              onSelect={(index, value) => setSelectedCategoryId(categories[index].id)}  // Set category ID based on selection
-              defaultValue="Select a Category"
-            />
+            <Picker
+              selectedValue={selectedCategoryId}
+              onValueChange={(itemValue: React.SetStateAction<number | null>) => setSelectedCategoryId(itemValue)}
+              style={{ height: 50, marginBottom: 10 }}
+            >
+              <Picker.Item label="Select a Category" value={null} />
+              {categories.map((category) => (
+                <Picker.Item key={category.id} label={category.name} value={category.id} />
+              ))}
+            </Picker>
 
-            {/* Location Dropdown */}
+            {/* Location Picker */}
             <Text>Location</Text>
-            <ModalDropdown
-              options={['Fridge', 'Freezer', 'Pantry']}
-              style={styles.dropdown}
-              dropdownStyle={styles.dropdownMenu}
-              textStyle={styles.dropdownText}
-              onSelect={(index, value) => setLocation(index + 1)}
-              defaultValue="Select a Location"
-            />
+            <Picker
+              selectedValue={location}
+              onValueChange={(itemValue: React.SetStateAction<number | null>) => setLocation(itemValue)}
+              style={{ height: 50, marginBottom: 10 }}
+            >
+              <Picker.Item label="Select a Location" value={null} />
+              {locations.map((loc) => (
+                <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
+              ))}
+            </Picker>
 
             {/* Expiration Date Input */}
             <Text>Expiration Date</Text>
@@ -225,146 +240,3 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
-// Styles for the components
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f2f2f2',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#f2f2f2',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  searchBar: {
-    backgroundColor: 'white',
-    padding: 10,
-    borderRadius: 5,
-    marginBottom: 15,
-  },
-  filterButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  filterButton: {
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 5,
-  },
-  filterText: {
-    color: '#000',
-  },
-  fridgeButton: {
-    backgroundColor: '#FFDB5C',
-  },
-  freezerButton: {
-    backgroundColor: '#7AA0FF',
-  },
-  pantryButton: {
-    backgroundColor: '#FF8F8F',
-  },
-  recentItemsContainer: {
-    padding: 20,
-  },
-  recentItemsHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  noItemsText: {
-    textAlign: 'center',
-    color: '#999',
-  },
-  itemContainer: {
-    backgroundColor: 'white',
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  itemContent: {
-    flexDirection: 'column',
-  },
-  itemName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  itemDetails: {
-    color: '#555',
-  },
-  badge: {
-    padding: 5,
-    borderRadius: 5,
-    color: 'white',
-  },
-  fridgeBadge: {
-    backgroundColor: '#FFDB5C',
-  },
-  freezerBadge: {
-    backgroundColor: '#7AA0FF',
-  },
-  pantryBadge: {
-    backgroundColor: '#FF8F8F',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-  },
-  modalTitle: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  input: {
-    borderWidth: 1,
-    padding: 8,
-    marginBottom: 10,
-    borderRadius: 5,
-    borderColor: '#ddd',
-  },
-  dropdown: {
-    borderWidth: 1,
-    padding: 8,
-    marginBottom: 10,
-    borderRadius: 5,
-    borderColor: '#ddd',
-  },
-  dropdownMenu: {
-    width: '85%',
-  },
-  dropdownText: {
-    fontSize: 16,
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  saveButton: {
-    backgroundColor: 'green',
-    padding: 10,
-    borderRadius: 5,
-  },
-  cancelButton: {
-    backgroundColor: 'red',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: 'white',
-  },
-});
