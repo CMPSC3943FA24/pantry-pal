@@ -33,7 +33,8 @@ export default function App() {
   const [quantity, setQuantity] = useState(0);
   const [notes, setNotes] = useState('');
   const [itemId, setItemId] = useState<number | null>(null); // Added state for selected item to delete
-
+  const [searchQuery, setSearchQuery] = useState(''); // State to hold the search query
+  const [activeCategory, setActiveCategory] = useState<number | null>(null); // null means no filter, 1 for Fridge, 2 for Freezer, 3 for Pantry
 
   // useEffect to initialize the database and fetch items/categories on component mount
   useEffect(() => {
@@ -115,6 +116,11 @@ export default function App() {
   // Function to count how many items exist in each category (Fridge, Freezer, Pantry)
   const countByCategory = (categoryId: number) => pantryItems.filter(item => item.category_id === categoryId).length;
 
+  // Function to filter pantry items based on the selected category
+  const filteredPantryItems = activeCategory
+   ? pantryItems.filter(item => item.category_id === activeCategory)
+   : pantryItems; // If no category is selected, show all items
+
   // Function to render a single pantry item in the list
   const renderPantryItem = ({ item }: { item: PantryItem }) => (
     <View style={styles.itemContainer}>
@@ -143,18 +149,21 @@ export default function App() {
         />
         <View style={styles.filterButtons}>
           {/* Button to filter items by Fridge */}
-          <TouchableOpacity style={[styles.filterButton, styles.fridgeButton]}>
+          <TouchableOpacity style={[styles.filterButton, styles.fridgeButton]} onPress={() => setActiveCategory(1)}>
             <Text style={styles.filterText}>Fridge ({countByCategory(1)})</Text>
           </TouchableOpacity>
 
           {/* Button to filter items by Freezer */}
-          <TouchableOpacity style={[styles.filterButton, styles.freezerButton]}>
+          <TouchableOpacity style={[styles.filterButton, styles.freezerButton]} onPress={() => setActiveCategory(2)}>
             <Text style={styles.filterText}>Freezer ({countByCategory(2)})</Text>
           </TouchableOpacity>
 
           {/* Button to filter items by Pantry */}
-          <TouchableOpacity style={[styles.filterButton, styles.pantryButton]}>
+          <TouchableOpacity style={[styles.filterButton, styles.pantryButton]} onPress={() => setActiveCategory(3)}>
             <Text style={styles.filterText}>Pantry ({countByCategory(3)})</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.filterButton, styles.clearButton]} onPress={() => setActiveCategory(null)}>
+            <Text style={styles.filterText}>Show All</Text>
           </TouchableOpacity>
         </View>
       </View>
