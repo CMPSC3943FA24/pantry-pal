@@ -41,6 +41,9 @@ export const styles = StyleSheet.create({
     pantryButton: {
       backgroundColor: '#FF8F8F',
     },
+    clearButton: {
+      backgroundColor: '#FFDB4C',
+    },
     recentItemsContainer: {
       padding: 20,
     },
