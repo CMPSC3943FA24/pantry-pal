@@ -2,6 +2,32 @@ import { StyleSheet } from 'react-native';
 
 // Styles for the components
 export const styles = StyleSheet.create({
+    quantityContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: 150,
+      marginBottom: 10,
+    },
+    button: {
+      backgroundColor: "#a6a6a6",
+      padding: 10,
+      borderRadius: 5,
+    },
+    buttonText: {
+      color: "#fff",
+      fontSize: 18,
+    },
+    quantityText: {
+      fontSize: 18,
+      marginHorizontal: 20,
+    },
+    quantityButton: {
+      backgroundColor: "#a6a6a6",
+      padding: 10,
+      borderRadius: 5,
+      marginVertical: 10,
+    },
     container: {
       flex: 1,
       backgroundColor: '#f2f2f2',
@@ -138,8 +164,9 @@ export const styles = StyleSheet.create({
       padding: 10,
       borderRadius: 5,
     },
-    buttonText: {
-      color: 'white',
+    closeButtonText: {
+      color: "#fff",
+      textAlign: "center",
     },
   });
   

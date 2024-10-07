@@ -200,7 +200,7 @@ export default function App() {
             <Picker
               selectedValue={selectedCategoryId}
               onValueChange={(itemValue: React.SetStateAction<number | null>) => setSelectedCategoryId(itemValue)}
-              style={{ height: 50, marginBottom: 10 }}
+              style={{ height: 150, marginBottom: 10  }}
             >
               <Picker.Item label="Select a Category" value={null} />
               {categories.map((category) => (
@@ -213,7 +213,7 @@ export default function App() {
             <Picker
               selectedValue={location}
               onValueChange={(itemValue: React.SetStateAction<number | null>) => setLocation(itemValue)}
-              style={{ height: 50, marginBottom: 10 }}
+              style={{ height: 150, marginBottom: 10 }}
             >
               <Picker.Item label="Select a Location" value={null} />
               {locations.map((loc) => (
@@ -232,13 +232,21 @@ export default function App() {
 
             {/* Quantity Input */}
             <Text>Quantity</Text>
-            <TextInput
-              placeholder="Quantity"
-              keyboardType="numeric"
-              value={quantity.toString()}
-              onChangeText={(value) => setQuantity(Number(value))}
-              style={styles.input}
-            />
+            <View style={styles.quantityContainer}>
+              
+              {/* Decrease Button */}
+              <TouchableOpacity onPress={() => setQuantity((prev) => Math.max(prev - 1, 0))} style={styles.button}>
+                <Text style={styles.buttonText}>-</Text>
+              </TouchableOpacity>
+
+              {/* Display Current Quantity */}
+              <Text style={styles.quantityText}>{quantity}</Text>
+
+              {/* Increase Button */}
+              <TouchableOpacity onPress={() => setQuantity((prev) => prev + 1)} style={styles.button}>
+                <Text style={styles.buttonText}>+</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Notes Input */}
             <Text>Notes</Text>
