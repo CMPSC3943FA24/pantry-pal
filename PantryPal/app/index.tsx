@@ -1,147 +1,207 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, FlatList, SafeAreaView, Modal, TextInput, TouchableOpacity } from 'react-native';
-import { initializeDatabase, getCategories, getPantryItems, addPantryItem } from './databaseService';  // Import from the databaseService
-import { Picker } from '@react-native-picker/picker';  // Import the Picker component
+import { View, Text, TextInput, Button, Modal, TouchableOpacity, ScrollView, SafeAreaView, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import { initializeDatabase, getCategories, getPantryItems, addPantryItem, getLocations, Location, deletePantryItem } from './databaseService'; // Import Location from databaseService
+import { styles } from './styles';
 
-// Define the type for the PantryItem and Category
+// Define the type for PantryItem
 interface PantryItem {
   id: number;
   name: string;
   category_id: number;
-  brand_id: number;
-  location_id: number;
   expiration_date: string;
   quantity: number;
-  added_date: string;
   notes: string;
 }
 
+// Define the type for Category
 interface Category {
   id: number;
   name: string;
 }
 
 export default function App() {
-  // State to manage pantry items and categories
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-
-  // State to control modal visibility
+  const [locations, setLocations] = useState<Location[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // States for form inputs
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // Added delete modal visibility state
   const [itemName, setItemName] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [brand, setBrand] = useState('');
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState<number | null>(null);
   const [expirationDate, setExpirationDate] = useState('');
   const [quantity, setQuantity] = useState(0);
   const [notes, setNotes] = useState('');
+  const [itemId, setItemId] = useState<number | null>(null); // Added state for selected item to delete
+  const [searchQuery, setSearchQuery] = useState(''); // State to hold the search query
+  const [activeCategory, setActiveCategory] = useState<number | null>(null); // null means no filter, 1 for Fridge, 2 for Freezer, 3 for Pantry
 
+  // useEffect to initialize the database and fetch items/categories on component mount
   useEffect(() => {
-    // Initialize the database when the app starts
-    initializeDatabase();
-
-    // Fetch pantry items and categories from the database
-    fetchPantryItems();
-    fetchCategories();
+    initializeDatabase();  // Initialize database when app starts
+    fetchPantryItems();  // Fetch pantry items from the database
+    fetchCategories();  // Fetch categories from the database
+    fetchLocations(); // Fetch locations from the database
   }, []);
 
   // Function to fetch all pantry items from the database
   const fetchPantryItems = () => {
     const fetchedPantryItems = getPantryItems();
-    setPantryItems(fetchedPantryItems);  // Update state with fetched pantry items
+    setPantryItems(fetchedPantryItems); // Update state with fetched pantry items
   };
 
   // Function to fetch all categories from the Categories table
   const fetchCategories = () => {
     const fetchedCategories = getCategories();
-    setCategories(fetchedCategories);  // Update state with fetched categories
+    setCategories(fetchedCategories); // Update state with fetched categories
   };
 
-  // Function to add a new item to the pantry
+  // Fetch locations from the Locations table
+  const fetchLocations = () => {
+    const fetchedLocations = getLocations();
+    setLocations(fetchedLocations);
+  };
+
   const handleAddItem = () => {
-    if (selectedCategoryId === null || !itemName || !expirationDate || quantity <= 0) {
+    if (selectedCategoryId === null || location === null || !itemName || !expirationDate || quantity <= 0) {
       console.error('Required fields are missing or invalid');
       return;
     }
 
     try {
-      // Call addPantryItem from databaseService
-      addPantryItem(
-        itemName,
-        selectedCategoryId,   // Category ID from Picker
-        0,  // Assuming the brand is not linked to the Brands table
-        0,  // Assuming the location is not linked to the Locations table
-        expirationDate,
-        quantity,
-        new Date().toISOString(),  // Current date as added_date
-        notes
-      );
+      addPantryItem(itemName, location, 0, 0, expirationDate, quantity, new Date().toISOString(), notes);
       console.log('Item added successfully');
     } catch (error) {
       console.error('Error adding item:', error);
     }
 
-    // Refresh the pantry items list after adding the new item
     fetchPantryItems();
-
-    // Close the modal
     setModalVisible(false);
+    resetFormFields();
+  };
 
-    // Clear the form
+  const handleDeleteItem = (id: number) => {
+    try {
+      deletePantryItem(id);
+      console.log('Item deleted successfully');
+      setPantryItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      setDeleteModalVisible(false);
+      setItemId(null);
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
+  const confirmDeleteItem = (id: number) => {
+    Alert.alert(
+      'Confirm Delete',
+      'Are you sure you want to delete this item?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => handleDeleteItem(id) },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const resetFormFields = () => {
     setItemName('');
+    setLocation(null);
     setSelectedCategoryId(null);
-    setBrand('');
-    setLocation('');
     setExpirationDate('');
     setQuantity(0);
     setNotes('');
   };
 
-  // UI for displaying the pantry items
+  // Function to count how many items exist in each category (Fridge, Freezer, Pantry)
+  const countByCategory = (categoryId: number) => pantryItems.filter(item => item.category_id === categoryId).length;
+
+  // Function to filter pantry items based on the selected category
+  const filteredPantryItems = activeCategory
+   ? pantryItems.filter(item => item.category_id === activeCategory)
+   : pantryItems; // If no category is selected, show all items
+
+  // Function to render a single pantry item in the list
   const renderPantryItem = ({ item }: { item: PantryItem }) => (
-    <View style={{ padding: 10 }}>
-      <Text>{item.name} (Quantity: {item.quantity})</Text>
-      <Text>Expiration Date: {item.expiration_date}</Text>
-      <Text>Notes: {item.notes}</Text>
+    <View style={styles.itemContainer}>
+      <View style={styles.itemContent}>
+        <Text style={styles.itemName}>{item.name}</Text>
+        <Text style={styles.itemDetails}>Expires in {item.expiration_date}</Text>
+        <Text style={styles.itemDetails}>Quantity: {item.quantity}</Text>
+      </View>
+      <Text style={[styles.badge, item.category_id === 1 ? styles.fridgeBadge : item.category_id === 2 ? styles.freezerBadge : styles.pantryBadge]}>
+        {item.category_id === 1 ? 'Fridge' : item.category_id === 2 ? 'Freezer' : 'Pantry'}
+      </Text>
+      {/* Delete button that shows a confirmation prompt */}
+      <TouchableOpacity onPress={() => confirmDeleteItem(item.id)}>
+        <Text style={{ color: 'red' }}>Delete</Text>
+      </TouchableOpacity>
     </View>
   );
 
   return (
-    <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>Pantry Items</Text>
+    <SafeAreaView style={styles.container}>
+      {/* Search and Filter Section */}
+      <View style={styles.header}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search Items"
+        />
+        <View style={styles.filterButtons}>
+          {/* Button to filter items by Fridge */}
+          <TouchableOpacity style={[styles.filterButton, styles.fridgeButton]} onPress={() => setActiveCategory(1)}>
+            <Text style={styles.filterText}>Fridge ({countByCategory(1)})</Text>
+          </TouchableOpacity>
+
+          {/* Button to filter items by Freezer */}
+          <TouchableOpacity style={[styles.filterButton, styles.freezerButton]} onPress={() => setActiveCategory(2)}>
+            <Text style={styles.filterText}>Freezer ({countByCategory(2)})</Text>
+          </TouchableOpacity>
+
+          {/* Button to filter items by Pantry */}
+          <TouchableOpacity style={[styles.filterButton, styles.pantryButton]} onPress={() => setActiveCategory(3)}>
+            <Text style={styles.filterText}>Pantry ({countByCategory(3)})</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.filterButton, styles.clearButton]} onPress={() => setActiveCategory(null)}>
+            <Text style={styles.filterText}>Show All</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Button to add a new item */}
       <Button title="Add Item" onPress={() => setModalVisible(true)} />
       
-      {/* Check if there are any pantry items */}
-      {pantryItems.length === 0 ? (
-        <Text>No items in pantry</Text> // Display message if there are no items
-      ) : (
-        <FlatList
-          data={pantryItems}
-          renderItem={renderPantryItem}
-          keyExtractor={(item) => item.id.toString()}
-        />
-      )}
+      {/* Button to delete an item */}
+      <Button title="Delete Item" onPress={() => setDeleteModalVisible(true)} />
 
-      {/* Modal for adding a new pantry item */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 10, width: '90%' }}>
-            <Text style={{ fontSize: 18, marginBottom: 10 }}>Add Pantry Item</Text>
-            
+      {/* List of recent items */}
+      <ScrollView contentContainerStyle={styles.recentItemsContainer}>
+        <Text style={styles.recentItemsHeader}>Your Recent Items</Text>
+        {pantryItems.length === 0 ? (
+          <Text style={styles.noItemsText}>No items in pantry</Text>
+        ) : (
+          pantryItems.map((item) => (
+            // Ensure a unique key is provided for each item
+            <View key={item.id}>
+              {renderPantryItem({ item })}
+            </View>
+          ))
+        )}
+      </ScrollView>
+
+      {/* Modal for adding items */}
+      <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Pantry Item</Text>
+
             {/* Item Name Input */}
             <Text>Item Name</Text>
             <TextInput
               placeholder="Item Name"
               value={itemName}
               onChangeText={setItemName}
-              style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+              style={styles.input}
             />
 
             {/* Category Picker */}
@@ -157,23 +217,18 @@ export default function App() {
               ))}
             </Picker>
 
-            {/* Brand Input */}
-            <Text>Brand</Text>
-            <TextInput
-              placeholder="Brand"
-              value={brand}
-              onChangeText={setBrand}
-              style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
-            />
-
-            {/* Location Input */}
+            {/* Location Picker */}
             <Text>Location</Text>
-            <TextInput
-              placeholder="Location"
-              value={location}
-              onChangeText={setLocation}
-              style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
-            />
+            <Picker
+              selectedValue={location}
+              onValueChange={(itemValue: React.SetStateAction<number | null>) => setLocation(itemValue)}
+              style={{ height: 50, marginBottom: 10 }}
+            >
+              <Picker.Item label="Select a Location" value={null} />
+              {locations.map((loc) => (
+                <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
+              ))}
+            </Picker>
 
             {/* Expiration Date Input */}
             <Text>Expiration Date</Text>
@@ -181,7 +236,7 @@ export default function App() {
               placeholder="Expiration Date (YYYY-MM-DD)"
               value={expirationDate}
               onChangeText={setExpirationDate}
-              style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+              style={styles.input}
             />
 
             {/* Quantity Input */}
@@ -191,7 +246,7 @@ export default function App() {
               keyboardType="numeric"
               value={quantity.toString()}
               onChangeText={(value) => setQuantity(Number(value))}
-              style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+              style={styles.input}
             />
 
             {/* Notes Input */}
@@ -200,21 +255,47 @@ export default function App() {
               placeholder="Notes"
               value={notes}
               onChangeText={setNotes}
-              style={{ borderWidth: 1, padding: 8, marginBottom: 10 }}
+              style={styles.input}
             />
-            
+
             {/* Save and Cancel Buttons */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <TouchableOpacity onPress={handleAddItem} style={{ backgroundColor: 'green', padding: 10, borderRadius: 5 }}>
-                <Text style={{ color: 'white' }}>Save</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={handleAddItem} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={{ backgroundColor: 'red', padding: 10, borderRadius: 5 }}>
-                <Text style={{ color: 'white' }}>Cancel</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelButton}>
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* Modal for deleting an item via Picker */}
+      <Modal animationType="slide" transparent={true} visible={deleteModalVisible} onRequestClose={() => setDeleteModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Delete Pantry Item</Text>
+            <Text>Select an item to delete:</Text>
+            <Picker selectedValue={itemId} onValueChange={(value) => setItemId(value)}>
+              <Picker.Item label="Select an Item" value={null} />
+              {pantryItems.map((item) => (
+                <Picker.Item key={item.id} label={item.name} value={item.id} />
+              ))}
+            </Picker>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity onPress={() => itemId !== null && handleDeleteItem(itemId)} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => setDeleteModalVisible(false)} style={styles.cancelButton}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
     </SafeAreaView>
   );
 }
