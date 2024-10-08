@@ -99,6 +99,12 @@ export const styles = StyleSheet.create({
       justifyContent: 'space-between',
       alignItems: 'center',
     },
+    itemContentWrapper: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+      marginRight: 10,   // For some spacing between the text and the trash icon
+    },
     itemContent: {
       flexDirection: 'column',
     },
@@ -108,6 +114,10 @@ export const styles = StyleSheet.create({
     },
     itemDetails: {
       color: '#555',
+    },
+    trashIcon: {
+      padding: 5,
+      backgroundColor: 'transparent',
     },
     badge: {
       padding: 5,
@@ -187,5 +197,60 @@ export const styles = StyleSheet.create({
     closeButtonText: {
       color: "#fff",
       textAlign: "center",
+    },
+    listContainer: {
+      paddingBottom: 20, // Ensures there's space at the bottom
+    },
+    itemBackgroundLight: {
+      backgroundColor: '#f9f9f9',
+    },
+    itemBackgroundDark: {
+      backgroundColor: '#e9e9e9',
+    },
+    itemsHeader: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      padding: 10,
+      textAlign: 'center',
+    },
+    floatingButtonAdd: {
+      position: 'absolute',
+      bottom: 20,
+      right: 20,
+      backgroundColor: '#28a745', // Green for the add button
+      borderRadius: 50,
+      width: 60,
+      height: 60,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.8,
+      shadowRadius: 2,
+      elevation: 5,
+    },
+    floatingButtonDelete: {
+      position: 'absolute',
+      bottom: 20,
+      right: 100,
+      backgroundColor: '#dc3545', // Red for the delete button
+      borderRadius: 50,
+      width: 60,
+      height: 60,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.8,
+      shadowRadius: 2,
+      elevation: 5,
+    },
+    floatingButtonText: {
+      color: '#fff',
+      fontSize: 30,
+      textAlign: 'center',
+    },
+    clearButton: {
+      backgroundColor: '#cccccc', // Gray for the "All" button
     },
   });

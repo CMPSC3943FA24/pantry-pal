@@ -151,7 +151,12 @@ export const addPantryItem = (
 };
 
 export const getPantryItems = (): PantryItem[] => {
-    return db.getAllSync<PantryItem>('SELECT * FROM PantryItems;', []);
+    return db.getAllSync<PantryItem & { category_name: string }>(
+        `SELECT PantryItems.*, Categories.name AS category_name 
+         FROM PantryItems 
+         INNER JOIN Categories ON PantryItems.category_id = Categories.id;`,
+        []
+    );
 };
 
 export const updatePantryItem = (
