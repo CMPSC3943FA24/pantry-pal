@@ -2,6 +2,41 @@ import { StyleSheet } from 'react-native';
 
 // Styles for the components
 export const styles = StyleSheet.create({
+    quantityContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: 150,
+      marginBottom: 10,
+    },
+    button: {
+      backgroundColor: "#a6a6a6",
+      padding: 10,
+      borderRadius: 5,
+    },
+    buttonText: {
+      color: "#fff",
+      fontSize: 18,
+    },
+    quantityText: {
+      fontSize: 18,
+      marginHorizontal: 20,
+    },
+    quantityButton: {
+      backgroundColor: "#a6a6a6",
+      padding: 10,
+      borderRadius: 5,
+      marginVertical: 10,
+    },
+    quantityInput: {
+      borderWidth: 1,
+      borderColor: '#ccc',
+      borderRadius: 5,
+      padding: 10,
+      width: 50, // Adjust width as needed
+      textAlign: 'center',
+      fontSize: 16,
+    },
     container: {
       flex: 1,
       backgroundColor: '#f2f2f2',
@@ -111,6 +146,17 @@ export const styles = StyleSheet.create({
       borderRadius: 5,
       borderColor: '#ddd',
     },
+    pickerContainer: {
+      borderWidth: 1,
+      borderColor: '#ddd',
+      borderRadius: 5,
+      marginBottom: 10,
+      padding: 8,
+    },
+    picker: {
+      height: 50,
+      width: '100%',
+    },
     dropdown: {
       borderWidth: 1,
       padding: 8,
@@ -138,8 +184,8 @@ export const styles = StyleSheet.create({
       padding: 10,
       borderRadius: 5,
     },
-    buttonText: {
-      color: 'white',
+    closeButtonText: {
+      color: "#fff",
+      textAlign: "center",
     },
   });
-  

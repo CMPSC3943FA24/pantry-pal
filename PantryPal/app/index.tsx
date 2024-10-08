@@ -197,30 +197,34 @@ export default function App() {
 
             {/* Category Picker */}
             <Text>Category</Text>
-            <Picker
-              selectedValue={selectedCategoryId}
-              onValueChange={(itemValue: React.SetStateAction<number | null>) => setSelectedCategoryId(itemValue)}
-              style={{ height: 50, marginBottom: 10 }}
-            >
-              <Picker.Item label="Select a Category" value={null} />
-              {categories.map((category) => (
-                <Picker.Item key={category.id} label={category.name} value={category.id} />
-              ))}
-            </Picker>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={selectedCategoryId}
+                onValueChange={(itemValue: React.SetStateAction<number | null>) => setSelectedCategoryId(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select a Category" value={null} />
+                {categories.map((category) => (
+                  <Picker.Item key={category.id} label={category.name} value={category.id} />
+                ))}
+              </Picker>
+            </View>
 
             {/* Location Picker */}
             <Text>Location</Text>
-            <Picker
-              selectedValue={location}
-              onValueChange={(itemValue: React.SetStateAction<number | null>) => setLocation(itemValue)}
-              style={{ height: 50, marginBottom: 10 }}
-            >
-              <Picker.Item label="Select a Location" value={null} />
-              {locations.map((loc) => (
-                <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
-              ))}
-            </Picker>
-
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={location}
+                onValueChange={(itemValue: React.SetStateAction<number | null>) => setLocation(itemValue)}
+                style={styles.picker}
+              >
+                <Picker.Item label="Select a Location" value={null} />
+                {locations.map((loc) => (
+                  <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
+                ))}
+              </Picker>
+            </View>
+            
             {/* Expiration Date Input */}
             <Text>Expiration Date</Text>
             <TextInput
@@ -232,13 +236,33 @@ export default function App() {
 
             {/* Quantity Input */}
             <Text>Quantity</Text>
-            <TextInput
-              placeholder="Quantity"
-              keyboardType="numeric"
-              value={quantity.toString()}
-              onChangeText={(value) => setQuantity(Number(value))}
-              style={styles.input}
-            />
+            <View style={styles.quantityContainer}>
+              
+              {/* Decrease Button */}
+              <TouchableOpacity onPress={() => setQuantity((prev) => Math.max(prev - 1, 0))} style={styles.button}>
+                <Text style={styles.buttonText}>-</Text>
+              </TouchableOpacity>
+
+              {/* Input for Quantity */}
+              <TextInput
+                style={styles.quantityInput}
+                keyboardType="numeric"
+                value={quantity.toString()} // Display the current quantity as text
+                onChangeText={(value) => {
+                  const parsedValue = parseInt(value, 10); // Parse input to a number
+                  if (!isNaN(parsedValue)) {
+                    setQuantity(parsedValue); // Set the quantity if the value is a valid number
+                  } else {
+                    setQuantity(0); // If invalid, default to 0 or handle it appropriately
+                  }
+                }}
+              />
+
+              {/* Increase Button */}
+              <TouchableOpacity onPress={() => setQuantity((prev) => prev + 1)} style={styles.button}>
+                <Text style={styles.buttonText}>+</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Notes Input */}
             <Text>Notes</Text>
@@ -251,11 +275,11 @@ export default function App() {
 
             {/* Save and Cancel Buttons */}
             <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={handleAddItem} style={styles.saveButton}>
-                <Text style={styles.buttonText}>Save</Text>
-              </TouchableOpacity>
               <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelButton}>
                 <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleAddItem} style={styles.saveButton}>
+                <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
             </View>
           </View>
