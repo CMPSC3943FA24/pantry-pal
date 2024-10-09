@@ -3,7 +3,7 @@ import * as SQLite from 'expo-sqlite';
 // Open or create the database file 'pantryDB.db' using synchronous API
 const db = SQLite.openDatabaseSync('pantryDB.db');
 
-// Predefined data for Categories and Allergens
+// Predefined data for Categories and Allergens and Locations
 const predefinedCategories = [
     'Dairy', 'Meat & Poultry', 'Seafood', 'Produce', 'Bakery', 'Canned Goods', 'Grains & Pasta', 'Snacks', 
     'Frozen Foods', 'Beverages', 'Condiments & Sauces', 'Spices & Herbs', 'Baking Supplies', 'Breakfast Items', 
@@ -14,6 +14,8 @@ const predefinedAllergens = [
     'Gluten', 'Peanuts', 'Tree Nuts', 'Dairy', 'Eggs', 'Soy', 'Shellfish', 'Fish', 'Wheat', 'Sesame', 
     'Mustard', 'Sulphites', 'Celery', 'Lupin', 'Corn', 'Artificial Preservatives', 'Coconut'
 ];
+
+const predefinedLocations = ['Fridge', 'Freezer', 'Pantry'];
 
 // Define types for rows returned by SELECT queries
 interface CountRow {
@@ -45,6 +47,12 @@ interface ShoppingList {
     notes: string;
 }
 
+// Define and export the Location interface
+export interface Location {
+    id: number;
+    name: string;
+  }
+
 // Function to initialize the database, create tables, and insert predefined data
 export const initializeDatabase = () => {
     try {
@@ -72,6 +80,14 @@ export const initializeDatabase = () => {
                 db.execSync(`INSERT INTO Allergens (name) VALUES ('${allergen}');`);  // Manually interpolate allergen
             }
         }
+
+         // Insert predefined Locations if empty
+         const locationCount = db.getAllSync<CountRow>('SELECT COUNT(*) as count FROM Locations;', [])[0].count;
+         if (locationCount === 0) {
+             for (const location of predefinedLocations) {
+                 db.execSync(`INSERT INTO Locations (name) VALUES ('${location}');`);
+             }
+         }
 
     } catch (error) {
         console.log('Error initializing database:', error);
@@ -135,7 +151,12 @@ export const addPantryItem = (
 };
 
 export const getPantryItems = (): PantryItem[] => {
-    return db.getAllSync<PantryItem>('SELECT * FROM PantryItems;', []);
+    return db.getAllSync<PantryItem & { category_name: string }>(
+        `SELECT PantryItems.*, Categories.name AS category_name 
+         FROM PantryItems 
+         INNER JOIN Categories ON PantryItems.category_id = Categories.id;`,
+        []
+    );
 };
 
 export const updatePantryItem = (
