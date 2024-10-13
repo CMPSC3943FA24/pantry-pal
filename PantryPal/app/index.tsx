@@ -35,6 +35,7 @@ export default function App() {
   const [itemId, setItemId] = useState<number | null>(null); // Added state for selected item to delete
   const [searchQuery, setSearchQuery] = useState(''); // State to hold the search query
   const [activeCategory, setActiveCategory] = useState<number | null>(null); // null means no filter, 1 for Fridge, 2 for Freezer, 3 for Pantry
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc'); // Default to ascending
 
   // useEffect to initialize the database and fetch items/categories on component mount
   useEffect(() => {
@@ -116,10 +117,18 @@ export default function App() {
   // Function to count how many items exist in each category (Fridge, Freezer, Pantry)
   const countByCategory = (categoryId: number) => pantryItems.filter(item => item.category_id === categoryId).length;
 
-  // Function to filter pantry items based on the selected category
-  const filteredPantryItems = activeCategory
-   ? pantryItems.filter(item => item.category_id === activeCategory)
-   : pantryItems; // If no category is selected, show all items
+  
+  // Filter pantry items based on the active category (Fridge, Freezer, Pantry)
+  const filteredPantryItems = activeCategory ? pantryItems.filter(item => item.category_id === activeCategory)
+    : pantryItems; // Show all items if no category is selected
+
+  const sortedPantryItems = [...filteredPantryItems].sort((a, b) => {
+      if(sortOrder === 'asc') {
+        return a.quantity - b.quantity; // Ascending order
+      } else {
+        return b.quantity - a.quantity; //Descending order
+      }
+  });
 
   // Function to render a single pantry item in the list
   const renderPantryItem = ({ item }: { item: PantryItem }) => (
@@ -162,6 +171,8 @@ export default function App() {
           <TouchableOpacity style={[styles.filterButton, styles.pantryButton]} onPress={() => setActiveCategory(3)}>
             <Text style={styles.filterText}>Pantry ({countByCategory(3)})</Text>
           </TouchableOpacity>
+          
+          {/* Button to clear filters */}
           <TouchableOpacity style={[styles.filterButton, styles.clearButton]} onPress={() => setActiveCategory(null)}>
             <Text style={styles.filterText}>Show All</Text>
           </TouchableOpacity>
@@ -174,13 +185,16 @@ export default function App() {
       {/* Button to delete an item */}
       <Button title="Delete Item" onPress={() => setDeleteModalVisible(true)} />
 
+      {/* Button to sort by quantity */}
+      <Button title="Sort by Quantity" onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}/>
+      
       {/* List of recent items */}
       <ScrollView contentContainerStyle={styles.recentItemsContainer}>
         <Text style={styles.recentItemsHeader}>Your Recent Items</Text>
-        {pantryItems.length === 0 ? (
+        {sortedPantryItems.length === 0 ? (
           <Text style={styles.noItemsText}>No items in pantry</Text>
         ) : (
-          pantryItems.map((item) => (
+          sortedPantryItems.map((item) => (
             // Ensure a unique key is provided for each item
             <View key={item.id}>
               {renderPantryItem({ item })}

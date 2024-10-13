@@ -44,6 +44,9 @@ export const styles = StyleSheet.create({
     clearButton: {
       backgroundColor: '#FFDB4C',
     },
+    sortButton: {
+      backgroundColor: '#3AAFBA'
+    },
     recentItemsContainer: {
       padding: 20,
     },
