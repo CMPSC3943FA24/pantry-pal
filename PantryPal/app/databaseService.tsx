@@ -198,6 +198,7 @@ export const addPantryItem = (
     `INSERT INTO PantryItems (name, category_id, brand_id, location_id, expiration_date, quantity, added_date, notes) 
         VALUES ('${name}', ${category_id}, ${brand_id}, ${location_id}, '${expiration_date}', ${quantity}, '${added_date}', '${notes}');`
   ); // Manually interpolate all values
+  console.log("item added");
 };
 
 export const getPantryItems = (): PantryItem[] => {

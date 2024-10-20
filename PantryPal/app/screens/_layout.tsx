@@ -38,6 +38,17 @@ export default function ScreensLayout() {
           headerShown: false,
         }}
       />
+
+      <Tabs.Screen
+        name="barcodeScanner"
+        options={{
+          title: "Barcode Scanner",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="barcode" size={size} color={color} />
+          ),
+          headerShown: false, // Hide header for pantry screen
+        }}
+      />
     </Tabs>
   );
 }

@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/FontAwesome";
-import DateTimePicker from "react-native-modal-datetime-picker"; // Import DateTimePicker
+import DateTimePicker from "react-native-modal-datetime-picker";
 import {
   initializeDatabase,
   getCategories,
@@ -22,14 +22,14 @@ import {
   deletePantryItem,
 } from "../databaseService";
 import { styles } from "../styles";
-import { Link } from "expo-router";
+import { Link, useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
   getCategoryNameById,
   filterPantryItems,
   handleSearch,
   countByCategory,
   resetFormFields,
-} from "../utils"; // Import utility functions
+} from "../utils";
 
 // Define the type for PantryItem
 interface PantryItem {
@@ -47,34 +47,65 @@ interface Category {
   name: string;
 }
 
+// Helper function to ensure that parameters are handled as strings
+const getSingleValue = (value: string | string[] | undefined): string => {
+  if (Array.isArray(value)) {
+    return value[0]; // If it's an array, take the first element
+  }
+  return value || ""; // If it's a string, return the string; otherwise, return an empty string
+};
+
 export default function PantryScreen() {
+  const params = useLocalSearchParams();
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]); // Use Location array
-  const [location, setLocation] = useState<number | null>(null); // Location ID as a number
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [location, setLocation] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [itemName, setItemName] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    null
-  );
-  const [expirationDate, setExpirationDate] = useState("");
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false); // DatePicker state
-  const [quantity, setQuantity] = useState(0);
-  const [notes, setNotes] = useState("");
+  
+  // Ensure the values are strings using the helper function
+  const [itemName, setItemName] = useState(getSingleValue(params?.itemName));
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [expirationDate, setExpirationDate] = useState(getSingleValue(params?.expirationDate));
+  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
+  const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState(getSingleValue(params?.notes));
   const [itemId, setItemId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
 
+  // Flag to track if modal should be opened after data is set
+  const [shouldOpenModal, setShouldOpenModal] = useState(false);
+
   useEffect(() => {
     const initializeData = async () => {
       await initializeDatabase();
-      fetchPantryItems();
-      fetchCategories();
-      fetchLocations();
+      await fetchPantryItems();
+      await fetchCategories();
+      await fetchLocations();
+
+      // Check if there's prefilled data, and set the modal open flag
+      if (itemName || expirationDate || notes) {
+        setShouldOpenModal(true); // Mark that the modal should open
+      }
     };
     initializeData();
-  }, []);
+  }, []); // Run on component mount
+
+  // Effect to open modal if prefilled data is present
+  useEffect(() => {
+    if (shouldOpenModal) {
+      setModalVisible(true); // Open the modal once all data has been fetched
+      setShouldOpenModal(false); // Reset the flag
+    }
+  }, [shouldOpenModal]); // This effect will run when the flag changes
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPantryItems();
+    }, [])
+  );
 
   const fetchPantryItems = async () => {
     const fetchedPantryItems = await getPantryItems();
@@ -91,24 +122,21 @@ export default function PantryScreen() {
     setLocations(fetchedLocations);
   };
 
-  // Show DatePicker
   const showDatePicker = () => {
     setDatePickerVisibility(true);
   };
 
-  // Hide DatePicker
   const hideDatePicker = () => {
     setDatePickerVisibility(false);
   };
 
-  // Handle date selection from DatePicker
   const handleDateConfirm = (date: Date) => {
-    const formattedDate = date.toISOString().split("T")[0]; // Format date as YYYY-MM-DD
+    const formattedDate = date.toISOString().split("T")[0];
     setExpirationDate(formattedDate);
     hideDatePicker();
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (
       selectedCategoryId === null ||
       location === null ||
@@ -121,7 +149,7 @@ export default function PantryScreen() {
     }
 
     try {
-      addPantryItem(
+      await addPantryItem(
         itemName,
         location,
         0,
@@ -131,7 +159,7 @@ export default function PantryScreen() {
         new Date().toISOString(),
         notes
       );
-      fetchPantryItems();
+      await fetchPantryItems();
       setModalVisible(false);
       resetFormFields(
         setItemName,
@@ -179,7 +207,6 @@ export default function PantryScreen() {
     filterCategoryId
   );
 
-  // This function sets the header title based on the current category filter
   const getHeaderTitle = () => {
     if (filterCategoryId === 1) {
       return "Your Fridge Items";
@@ -211,7 +238,7 @@ export default function PantryScreen() {
         href={{
           pathname: "./itemDetail",
           params: {
-            item: JSON.stringify(item), // Pass the item as a JSON string in the params
+            item: JSON.stringify(item),
           },
         }}
         style={styles.itemContentWrapper}
@@ -250,7 +277,7 @@ export default function PantryScreen() {
           style={styles.searchBar}
           placeholder="Search Items"
           value={searchQuery}
-          onChangeText={(query) => handleSearch(query, setSearchQuery)} // Use utility function for handling search
+          onChangeText={(query) => handleSearch(query, setSearchQuery)}
         />
         <View style={styles.filterButtons}>
           <TouchableOpacity
@@ -346,7 +373,7 @@ export default function PantryScreen() {
             <Text>Location</Text>
             <Picker
               selectedValue={location}
-              onValueChange={(itemValue) => setLocation(itemValue)} // Pass location ID as a number
+              onValueChange={(itemValue) => setLocation(itemValue)}
               style={styles.picker}
             >
               <Picker.Item label="Select a Location" value={null} />
@@ -359,7 +386,7 @@ export default function PantryScreen() {
               value={expirationDate}
               onChangeText={setExpirationDate}
               style={styles.input}
-              onFocus={showDatePicker} // Show date picker when the field is focused
+              onFocus={showDatePicker}
             />
             <DateTimePicker
               isVisible={isDatePickerVisible}

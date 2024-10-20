@@ -288,4 +288,24 @@ export const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
   },
+  barcodeScannerContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  barcodeScanner: {
+    height: 400,
+    width: 400,
+  },
+  scanButton: {
+    backgroundColor: "#007AFF",
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  scanButtonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 18,
+  },
 });
