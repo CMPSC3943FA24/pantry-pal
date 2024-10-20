@@ -308,4 +308,9 @@ export const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
   },
+  datePickerButton: {
+    color: "#007AFF", // iOS-like blue color
+    fontSize: 16,
+    marginVertical: 10,
+  },
 });

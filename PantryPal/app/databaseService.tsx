@@ -194,11 +194,22 @@ export const addPantryItem = (
   added_date: string,
   notes: string
 ) => {
-  db.execSync(
-    `INSERT INTO PantryItems (name, category_id, brand_id, location_id, expiration_date, quantity, added_date, notes) 
-        VALUES ('${name}', ${category_id}, ${brand_id}, ${location_id}, '${expiration_date}', ${quantity}, '${added_date}', '${notes}');`
-  ); // Manually interpolate all values
-  console.log("item added");
+  const query = `INSERT INTO PantryItems 
+    (name, category_id, brand_id, location_id, expiration_date, quantity, added_date, notes) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  db.prepareSync(query).executeSync([
+    name,
+    category_id,
+    brand_id,
+    location_id,
+    expiration_date,
+    quantity,
+    added_date,
+    notes,
+  ]);
+
+  console.log("Item added successfully");
 };
 
 export const getPantryItems = (): PantryItem[] => {

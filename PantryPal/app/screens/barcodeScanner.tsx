@@ -22,7 +22,7 @@ export default function BarcodeScannerScreen() {
   useFocusEffect(
     React.useCallback(() => {
       setScanned(false); // Reset scanned state when the screen is refocused
-      setScannerKey(prevKey => prevKey + 1); // Change key to force re-render
+      setScannerKey((prevKey) => prevKey + 1); // Change key to force re-render
     }, [])
   );
 

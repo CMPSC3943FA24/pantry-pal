@@ -22,12 +22,12 @@ import {
   deletePantryItem,
 } from "../databaseService";
 import { styles } from "../styles";
-import { Link, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { Link, router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
   getCategoryNameById,
   filterPantryItems,
   handleSearch,
-  countByCategory,
+  countByLocation,
   resetFormFields,
 } from "../utils";
 
@@ -47,7 +47,6 @@ interface Category {
   name: string;
 }
 
-// Helper function to ensure that parameters are handled as strings
 const getSingleValue = (value: string | string[] | undefined): string => {
   if (Array.isArray(value)) {
     return value[0]; // If it's an array, take the first element
@@ -56,50 +55,56 @@ const getSingleValue = (value: string | string[] | undefined): string => {
 };
 
 export default function PantryScreen() {
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams(); // Get params from barcode scan
   const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [location, setLocation] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  
-  // Ensure the values are strings using the helper function
-  const [itemName, setItemName] = useState(getSingleValue(params?.itemName));
+
+  const [itemName, setItemName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [expirationDate, setExpirationDate] = useState(getSingleValue(params?.expirationDate));
+  const [expirationDate, setExpirationDate] = useState("");
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [notes, setNotes] = useState(getSingleValue(params?.notes));
+  const [notes, setNotes] = useState("");
   const [itemId, setItemId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
+  const [filterLocationId, setFilterLocationId] = useState<number | null>(null);
 
-  // Flag to track if modal should be opened after data is set
-  const [shouldOpenModal, setShouldOpenModal] = useState(false);
+  // Control flow flag
+  const [paramsProcessed, setParamsProcessed] = useState(false); // Track param processing
 
   useEffect(() => {
     const initializeData = async () => {
-      await initializeDatabase();
-      await fetchPantryItems();
+      console.log("Component mounted: initializing data");
+      initializeDatabase();
       await fetchCategories();
       await fetchLocations();
-
-      // Check if there's prefilled data, and set the modal open flag
-      if (itemName || expirationDate || notes) {
-        setShouldOpenModal(true); // Mark that the modal should open
-      }
+      await fetchPantryItems();
     };
-    initializeData();
-  }, []); // Run on component mount
 
-  // Effect to open modal if prefilled data is present
+    initializeData();
+  }, []);
+
+  // Handle navigation params
   useEffect(() => {
-    if (shouldOpenModal) {
-      setModalVisible(true); // Open the modal once all data has been fetched
-      setShouldOpenModal(false); // Reset the flag
+    if (
+      (params?.itemName || params?.expirationDate || params?.notes) &&
+      !paramsProcessed &&
+      !modalVisible
+    ) {
+      console.log("Processing params for modal");
+      setItemName(getSingleValue(params?.itemName));
+      setExpirationDate(getSingleValue(params?.expirationDate));
+      setNotes(getSingleValue(params?.notes));
+
+      setModalVisible(true); // Open the modal
+      setParamsProcessed(true); // Mark the params as handled
     }
-  }, [shouldOpenModal]); // This effect will run when the flag changes
+  }, [params, paramsProcessed, modalVisible]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -109,16 +114,19 @@ export default function PantryScreen() {
 
   const fetchPantryItems = async () => {
     const fetchedPantryItems = await getPantryItems();
+    console.log("Fetched pantry items:", fetchedPantryItems.length);
     setPantryItems(fetchedPantryItems);
   };
 
   const fetchCategories = async () => {
     const fetchedCategories = await getCategories();
+    console.log("Categories fetched:", fetchedCategories);
     setCategories(fetchedCategories);
   };
 
   const fetchLocations = async () => {
     const fetchedLocations = await getLocations();
+    console.log("Locations fetched:", fetchedLocations);
     setLocations(fetchedLocations);
   };
 
@@ -132,43 +140,45 @@ export default function PantryScreen() {
 
   const handleDateConfirm = (date: Date) => {
     const formattedDate = date.toISOString().split("T")[0];
-    setExpirationDate(formattedDate);
-    hideDatePicker();
+    setExpirationDate(formattedDate); // Set the expiration date correctly
+    hideDatePicker(); // Close the date picker
+  };
+
+  const closeModal = () => {
+    console.log("Closing modal");
+    setModalVisible(false);
+    resetFormFields(
+      setItemName,
+      setLocation,
+      setSelectedCategoryId,
+      setExpirationDate,
+      setQuantity,
+      setNotes
+    );
+    setParamsProcessed(false); // Reset param processing flag when modal is closed
+    router.setParams({}); // Clear the URL params
   };
 
   const handleAddItem = async () => {
-    if (
-      selectedCategoryId === null ||
-      location === null ||
-      !itemName ||
-      !expirationDate ||
-      quantity <= 0
-    ) {
+    if (!selectedCategoryId || !itemName || !expirationDate || quantity <= 0 || location === null) {
       console.error("Required fields are missing or invalid");
       return;
     }
 
     try {
-      await addPantryItem(
-        itemName,
-        location,
-        0,
-        0,
-        expirationDate,
-        quantity,
-        new Date().toISOString(),
-        notes
+      console.log("Adding item:", itemName);
+      addPantryItem(
+        itemName, // 1. name
+        selectedCategoryId, // 2. category_id
+        0, // 3. brand_id placeholder
+        location, // 4. location_id
+        expirationDate, // 5. expiration_date
+        quantity, // 6. quantity
+        new Date().toISOString(), // 7. added_date
+        notes // 8. notes
       );
       await fetchPantryItems();
-      setModalVisible(false);
-      resetFormFields(
-        setItemName,
-        setLocation,
-        setSelectedCategoryId,
-        setExpirationDate,
-        setQuantity,
-        setNotes
-      );
+      closeModal(); // Close modal after adding item
     } catch (error) {
       console.error("Error adding item:", error);
     }
@@ -204,7 +214,8 @@ export default function PantryScreen() {
   const filteredItems = filterPantryItems(
     pantryItems,
     searchQuery,
-    filterCategoryId
+    filterCategoryId,
+    filterLocationId
   );
 
   const getHeaderTitle = () => {
@@ -225,50 +236,52 @@ export default function PantryScreen() {
   }: {
     item: PantryItem;
     index: number;
-  }) => (
-    <View
-      style={[
-        styles.itemContainer,
-        index % 2 === 0
-          ? styles.itemBackgroundLight
-          : styles.itemBackgroundDark,
-      ]}
-    >
-      <Link
-        href={{
-          pathname: "./itemDetail",
-          params: {
-            item: JSON.stringify(item),
-          },
-        }}
-        style={styles.itemContentWrapper}
-      >
-        <View style={styles.itemContent}>
-          <Text style={styles.itemName}>{item.name}</Text>
-          <Text style={styles.itemDetails}>
-            Category: {getCategoryNameById(item.category_id, categories)}
-          </Text>
-          <Text style={styles.itemDetails}>
-            Quantity: {item.quantity.toString()}
-          </Text>
-          {item.expiration_date ? (
-            <Text style={styles.itemDetails}>
-              Expires on: {item.expiration_date}
-            </Text>
-          ) : (
-            <Text style={styles.itemDetails}>No expiration date</Text>
-          )}
-        </View>
-      </Link>
+  }) => {
+    const categoryName = getCategoryNameById(item.category_id, categories);
 
-      <TouchableOpacity
-        onPress={() => confirmDeleteItem(item.id)}
-        style={styles.trashIcon}
+    return (
+      <View
+        style={[
+          styles.itemContainer,
+          index % 2 === 0
+            ? styles.itemBackgroundLight
+            : styles.itemBackgroundDark,
+        ]}
       >
-        <Icon name="trash" size={24} color="red" />
-      </TouchableOpacity>
-    </View>
-  );
+        <Link
+          href={{
+            pathname: "./itemDetail",
+            params: {
+              item: JSON.stringify(item),
+            },
+          }}
+          style={styles.itemContentWrapper}
+        >
+          <View style={styles.itemContent}>
+            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemDetails}>Category: {categoryName}</Text>
+            <Text style={styles.itemDetails}>
+              Quantity: {item.quantity.toString()}
+            </Text>
+            {item.expiration_date ? (
+              <Text style={styles.itemDetails}>
+                Expires on: {item.expiration_date}
+              </Text>
+            ) : (
+              <Text style={styles.itemDetails}>No expiration date</Text>
+            )}
+          </View>
+        </Link>
+
+        <TouchableOpacity
+          onPress={() => confirmDeleteItem(item.id)}
+          style={styles.trashIcon}
+        >
+          <Icon name="trash" size={24} color="red" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -282,31 +295,34 @@ export default function PantryScreen() {
         <View style={styles.filterButtons}>
           <TouchableOpacity
             style={[styles.filterButton, styles.fridgeButton]}
-            onPress={() => setFilterCategoryId(1)}
+            onPress={() => setFilterLocationId(1)}
           >
             <Text style={styles.filterText}>
-              Fridge ({countByCategory(pantryItems, 1)})
+              Fridge ({countByLocation(pantryItems, 1)})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.freezerButton]}
-            onPress={() => setFilterCategoryId(2)}
+            onPress={() => setFilterLocationId(2)}
           >
             <Text style={styles.filterText}>
-              Freezer ({countByCategory(pantryItems, 2)})
+              Freezer ({countByLocation(pantryItems, 2)})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.pantryButton]}
-            onPress={() => setFilterCategoryId(3)}
+            onPress={() => setFilterLocationId(3)}
           >
             <Text style={styles.filterText}>
-              Pantry ({countByCategory(pantryItems, 3)})
+              Pantry ({countByLocation(pantryItems, 3)})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.clearButton]}
-            onPress={() => setFilterCategoryId(null)}
+            onPress={() => {
+              setFilterCategoryId(null);
+              setFilterLocationId(null);
+            }}
           >
             <Text style={styles.filterText}>All</Text>
           </TouchableOpacity>
@@ -344,7 +360,7 @@ export default function PantryScreen() {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={closeModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -386,8 +402,10 @@ export default function PantryScreen() {
               value={expirationDate}
               onChangeText={setExpirationDate}
               style={styles.input}
-              onFocus={showDatePicker}
             />
+            <TouchableOpacity onPress={showDatePicker}>
+              <Text style={styles.datePickerButton}>Select Date</Text>
+            </TouchableOpacity>
             <DateTimePicker
               isVisible={isDatePickerVisible}
               mode="date"
@@ -422,16 +440,10 @@ export default function PantryScreen() {
               style={styles.input}
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.cancelButton}
-              >
+              <TouchableOpacity onPress={closeModal} style={styles.cancelButton}>
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleAddItem}
-                style={styles.saveButton}
-              >
+              <TouchableOpacity onPress={handleAddItem} style={styles.saveButton}>
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
             </View>
