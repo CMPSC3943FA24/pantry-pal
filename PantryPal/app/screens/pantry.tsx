@@ -113,19 +113,19 @@ export default function PantryScreen() {
   );
 
   const fetchPantryItems = async () => {
-    const fetchedPantryItems = await getPantryItems();
+    const fetchedPantryItems = getPantryItems();
     console.log("Fetched pantry items:", fetchedPantryItems.length);
     setPantryItems(fetchedPantryItems);
   };
 
   const fetchCategories = async () => {
-    const fetchedCategories = await getCategories();
+    const fetchedCategories = getCategories();
     console.log("Categories fetched:", fetchedCategories);
     setCategories(fetchedCategories);
   };
 
   const fetchLocations = async () => {
-    const fetchedLocations = await getLocations();
+    const fetchedLocations = getLocations();
     console.log("Locations fetched:", fetchedLocations);
     setLocations(fetchedLocations);
   };
