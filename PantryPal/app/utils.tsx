@@ -15,7 +15,7 @@ export const getCategoryNameById = (
   return category ? category.name : "Unknown Category";
 };
 
-// Utility function for filtering pantry items based on search query and category filter
+//Utility function to search items and filter by expiration date
 import { PantryItem } from "./screens/pantry";
 export const filterPantryItems = (
   items: PantryItem[],
@@ -23,24 +23,30 @@ export const filterPantryItems = (
   filterCategoryId: number | string | null
 ) => {
   const currentDate = new Date();
-  const daysUntilExpiringSoon = 7; //Adjust as necessary 7 means expiring in 7 days
-  const expiringSoonDate = new Date();
+  const daysUntilExpiringSoon = 7; // Adjust as necessary
+  const expiringSoonDate = new Date(currentDate);
   expiringSoonDate.setDate(currentDate.getDate() + daysUntilExpiringSoon);
   
   return items.filter((item) => {
+    const itemExpirationDate = new Date(item.expiration_date);
+    
+    // Match search query (case insensitive)
     const matchesSearch = item.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesCategory = 
-    filterCategoryId === null ||
-    item.category_id === filterCategoryId ||
-    (filterCategoryId === "expiringSoon" &&
-      new Date(item.expiration_date) <= expiringSoonDate &&
-      new Date(item.expiration_date) >= currentDate);
     
+    // Match category or handle "expiring soon"
+    const matchesCategory =
+      filterCategoryId === null ||
+      item.category_id === filterCategoryId ||
+      (filterCategoryId === "expiringSoon" &&
+        itemExpirationDate <= expiringSoonDate) ||
+      (filterCategoryId === "expired" &&
+        itemExpirationDate < currentDate);
     return matchesSearch && matchesCategory;
   });
 };
+
 
 // Utility function for handling search input change
 export const handleSearch = (

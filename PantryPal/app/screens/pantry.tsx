@@ -292,7 +292,7 @@ export default function PantryScreen() {
             style={[styles.filterButton, styles.expiringSoonButton]}
             onPress={() => setFilterCategoryId("expiringSoon")} // Set a special flag for expiring soon
           >
-          <Text style={styles.filterText}>Expiring Soon</Text>
+          <Text style={styles.filterText}>Expiring/Expired</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.runningLowButton]}
