@@ -32,7 +32,7 @@ import {
 } from "../utils"; // Import utility functions
 
 // Define the type for PantryItem
-interface PantryItem {
+export interface PantryItem {
   id: number;
   name: string;
   category_id: number;
@@ -55,16 +55,16 @@ export default function PantryScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [itemName, setItemName] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
-    null
-  );
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [expirationDate, setExpirationDate] = useState("");
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false); // DatePicker state
   const [quantity, setQuantity] = useState(0);
   const [notes, setNotes] = useState("");
   const [itemId, setItemId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
+  const [filterCategoryId, setFilterCategoryId] = useState<number | string | null>(null);
+  const [showLowQuantityOnly,setShowLowQuantityOnly] = useState(false);
+  const toggleLowQuantityView = () => {setShowLowQuantityOnly((prev) => !prev);};
 
   useEffect(() => {
     const initializeData = async () => {
@@ -178,7 +178,14 @@ export default function PantryScreen() {
     searchQuery,
     filterCategoryId
   );
+  const LOW_QUANTITY_THRESHOLD = 2; // Define the threshold for low quantity
 
+  const getLowQuantityItems = (items: PantryItem[]) => {
+    return items
+      .filter((item) => item.quantity <= LOW_QUANTITY_THRESHOLD) // Filter for running low items
+      .sort((a, b) => a.quantity - b.quantity); // Sort by quantity in ascending order
+  };
+  
   // This function sets the header title based on the current category filter
   const getHeaderTitle = () => {
     if (filterCategoryId === 1) {
@@ -187,6 +194,10 @@ export default function PantryScreen() {
       return "Your Freezer Items";
     } else if (filterCategoryId === 3) {
       return "Your Pantry Items";
+    } else if (filterCategoryId === "expiringSoon") {
+      return "Expiring Soon";
+    } else if (filterCategoryId === "runningLow") {
+      return "Running Low";
     } else {
       return "Your Items"; // Default when no filter is applied
     }
@@ -278,12 +289,24 @@ export default function PantryScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.filterButton, styles.expiringSoonButton]}
+            onPress={() => setFilterCategoryId("expiringSoon")} // Set a special flag for expiring soon
+          >
+          <Text style={styles.filterText}>Expiring Soon</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, styles.runningLowButton]}
+            onPress={toggleLowQuantityView}>
+          <Text style={styles.filterText}>
+            {showLowQuantityOnly ? 'Show All Items' : 'Show Running Low Items'} </Text>  
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.filterButton, styles.clearButton]}
             onPress={() => setFilterCategoryId(null)}
           >
             <Text style={styles.filterText}>All</Text>
           </TouchableOpacity>
-        </View>
+          </View>
       </View>
 
       <Text style={styles.itemsHeader}>{getHeaderTitle()}</Text>
@@ -292,7 +315,7 @@ export default function PantryScreen() {
         {filteredItems.length === 0 ? (
           <Text style={styles.noItemsText}>No items in pantry</Text>
         ) : (
-          filteredItems.map((item, index) => (
+          (showLowQuantityOnly ? getLowQuantityItems(filteredItems) : filteredItems).map((item, index) => (
             <View key={item.id}>{renderPantryItem({ item, index })}</View>
           ))
         )}

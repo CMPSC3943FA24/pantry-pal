@@ -16,18 +16,28 @@ export const getCategoryNameById = (
 };
 
 // Utility function for filtering pantry items based on search query and category filter
+import { PantryItem } from "./screens/pantry";
 export const filterPantryItems = (
-  items: any[],
+  items: PantryItem[],
   searchQuery: string,
-  filterCategoryId: number | null
+  filterCategoryId: number | string | null
 ) => {
+  const currentDate = new Date();
+  const daysUntilExpiringSoon = 7; //Adjust as necessary 7 means expiring in 7 days
+  const expiringSoonDate = new Date();
+  expiringSoonDate.setDate(currentDate.getDate() + daysUntilExpiringSoon);
+  
   return items.filter((item) => {
     const matchesSearch = item.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategoryId
-      ? item.category_id === filterCategoryId
-      : true;
+    const matchesCategory = 
+    filterCategoryId === null ||
+    item.category_id === filterCategoryId ||
+    (filterCategoryId === "expiringSoon" &&
+      new Date(item.expiration_date) <= expiringSoonDate &&
+      new Date(item.expiration_date) >= currentDate);
+    
     return matchesSearch && matchesCategory;
   });
 };

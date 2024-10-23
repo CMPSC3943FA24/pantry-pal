@@ -11,15 +11,15 @@ export const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#a6a6a6",
-    padding: 10,
+    padding: 9,
     borderRadius: 5,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 18,
+    fontSize: 16,
   },
   quantityText: {
-    fontSize: 18,
+    fontSize: 16,
     marginHorizontal: 20,
   },
   quantityButton: {
@@ -55,14 +55,17 @@ export const styles = StyleSheet.create({
   },
   filterButtons: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    marginVertical: 10,
   },
   filterButton: {
-    flex: 1,
-    marginHorizontal: 5,
-    alignItems: "center",
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
     borderRadius: 5,
+    alignItems: "center",
+    margin: 5,
+    width: "25%",    
   },
   filterText: {
     color: "#000",
@@ -75,6 +78,12 @@ export const styles = StyleSheet.create({
   },
   pantryButton: {
     backgroundColor: "#FF8F8F",
+  },
+  expiringSoonButton: {
+    backgroundColor: "#ffcc00",
+  },
+  runningLowButton: {
+    backgroundColor: "#4CAF50",
   },
   recentItemsContainer: {
     padding: 20,
@@ -133,6 +142,9 @@ export const styles = StyleSheet.create({
   },
   pantryBadge: {
     backgroundColor: "#FF8F8F",
+  },
+  expiringSoonBadge: {
+    backgroundColor: "ffcc00"
   },
   modalOverlay: {
     flex: 1,
