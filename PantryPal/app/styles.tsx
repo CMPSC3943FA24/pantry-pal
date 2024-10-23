@@ -61,7 +61,7 @@ export const styles = StyleSheet.create({
   },
   filterButton: {
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     borderRadius: 5,
     alignItems: "center",
     margin: 5,
@@ -71,19 +71,19 @@ export const styles = StyleSheet.create({
     color: "#000",
   },
   fridgeButton: {
-    backgroundColor: "#FFDB5C",
+    backgroundColor: "#1c88e9",
   },
   freezerButton: {
-    backgroundColor: "#7AA0FF",
+    backgroundColor: "#77f2c5",
   },
   pantryButton: {
-    backgroundColor: "#FF8F8F",
+    backgroundColor: "#38761d",
   },
   expiringSoonButton: {
-    backgroundColor: "#ffcc00",
+    backgroundColor: "#cc0000",
   },
   runningLowButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#ffd966",
   },
   recentItemsContainer: {
     padding: 20,

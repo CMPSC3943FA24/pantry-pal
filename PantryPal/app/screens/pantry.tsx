@@ -298,7 +298,7 @@ export default function PantryScreen() {
             style={[styles.filterButton, styles.runningLowButton]}
             onPress={toggleLowQuantityView}>
           <Text style={styles.filterText}>
-            {showLowQuantityOnly ? 'Show All Items' : 'Show Running Low Items'} </Text>  
+            {showLowQuantityOnly ? 'Show All Items' : 'Show Low Items'} </Text>  
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.clearButton]}
