@@ -157,6 +157,7 @@ export const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     width: "90%",
+    height: "80%",
   },
   modalTitle: {
     fontSize: 18,
@@ -177,7 +178,7 @@ export const styles = StyleSheet.create({
     padding: 8,
   },
   picker: {
-    height: 50,
+    height: 200,
     width: "100%",
   },
   dropdown: {

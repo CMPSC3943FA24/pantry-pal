@@ -16,7 +16,7 @@ export const getCategoryNameById = (
 };
 
 //Utility function to search items and filter by expiration date
-import { PantryItem } from "./screens/pantry";
+import {PantryItem} from "./databaseService";
 export const filterPantryItems = (
   items: PantryItem[],
   searchQuery: string,

@@ -19,6 +19,7 @@ import {
   addPantryItem,
   getLocations,
   Location,
+  PantryItem,
   deletePantryItem,
 } from "../databaseService";
 import { styles } from "../styles";
@@ -31,7 +32,7 @@ import {
   resetFormFields,
 } from "../utils"; // Import utility functions
 
-// Define the type for PantryItem
+/*// Define the type for PantryItem
 export interface PantryItem {
   id: number;
   name: string;
@@ -39,7 +40,7 @@ export interface PantryItem {
   expiration_date: string;
   quantity: number;
   notes: string;
-}
+}*/
 
 // Define the type for Category
 interface Category {
@@ -68,7 +69,7 @@ export default function PantryScreen() {
 
   useEffect(() => {
     const initializeData = async () => {
-      await initializeDatabase();
+      initializeDatabase();
       fetchPantryItems();
       fetchCategories();
       fetchLocations();
@@ -374,7 +375,11 @@ export default function PantryScreen() {
             >
               <Picker.Item label="Select a Location" value={null} />
               {locations.map((loc) => (
-                <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
+                <Picker.Item 
+                  key={loc.id} 
+                  label={loc.name} 
+                  value={loc.id} 
+                />
               ))}
             </Picker>
             <TextInput
