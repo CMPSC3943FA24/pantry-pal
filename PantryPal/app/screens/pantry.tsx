@@ -124,9 +124,9 @@ export default function PantryScreen() {
     try {
       addPantryItem(
         itemName,
+        selectedCategoryId,
+        0,
         location,
-        0,
-        0,
         expirationDate,
         quantity,
         new Date().toISOString(),

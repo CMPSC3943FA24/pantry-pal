@@ -38,7 +38,7 @@ export const filterPantryItems = (
     // Match category or handle "expiring soon"
     const matchesCategory =
       filterCategoryId === null ||
-      item.category_id === filterCategoryId ||
+      item.location_id === filterCategoryId ||
       (filterCategoryId === "expiringSoon" &&
         itemExpirationDate <= expiringSoonDate) ||
       (filterCategoryId === "expired" &&
@@ -58,7 +58,7 @@ export const handleSearch = (
 
 // Utility function for counting items by category
 export const countByCategory = (items: any[], categoryId: number) => {
-  return items.filter((item) => item.category_id === categoryId).length;
+  return items.filter((item) => item.location_id === categoryId).length;
 };
 
 // Utility function for resetting form fields
