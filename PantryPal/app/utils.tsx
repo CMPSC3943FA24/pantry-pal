@@ -38,11 +38,12 @@ export const filterPantryItems = (
     // Match category or handle "expiring soon"
     const matchesCategory =
       filterCategoryId === null ||
-      item.location_id === filterCategoryId ||
-      (filterCategoryId === "expiringSoon" &&
-        itemExpirationDate <= expiringSoonDate) ||
-      (filterCategoryId === "expired" &&
-        itemExpirationDate < currentDate);
+      filterCategoryId === item.category_id ||
+      (filterCategoryId === "Fridge" && item.location_id === 1) ||
+      (filterCategoryId === "Freezer" && item.location_id === 2) ||
+      (filterCategoryId === "Pantry" && item.location_id === 3) ||
+      (filterCategoryId === "expiringSoon" && itemExpirationDate <= expiringSoonDate) ||
+      (filterCategoryId === "expired" && itemExpirationDate < currentDate);
     return matchesSearch && matchesCategory;
   });
 };
@@ -56,9 +57,9 @@ export const handleSearch = (
   setSearchQuery(query);
 };
 
-// Utility function for counting items by category
-export const countByCategory = (items: any[], categoryId: number) => {
-  return items.filter((item) => item.location_id === categoryId).length;
+// Utility function for counting items by location
+export const countByLocation = (items: any[], locationId: number) => {
+  return items.filter((item) => item.location_id === locationId).length;
 };
 
 // Utility function for resetting form fields

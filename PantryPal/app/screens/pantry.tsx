@@ -28,19 +28,9 @@ import {
   getCategoryNameById,
   filterPantryItems,
   handleSearch,
-  countByCategory,
+  countByLocation,
   resetFormFields,
 } from "../utils"; // Import utility functions
-
-/*// Define the type for PantryItem
-export interface PantryItem {
-  id: number;
-  name: string;
-  category_id: number;
-  expiration_date: string;
-  quantity: number;
-  notes: string;
-}*/
 
 // Define the type for Category
 interface Category {
@@ -189,11 +179,11 @@ export default function PantryScreen() {
   
   // This function sets the header title based on the current category filter
   const getHeaderTitle = () => {
-    if (filterCategoryId === 1) {
+    if (filterCategoryId === "Fridge") {
       return "Your Fridge Items";
-    } else if (filterCategoryId === 2) {
+    } else if (filterCategoryId === "Freezer") {
       return "Your Freezer Items";
-    } else if (filterCategoryId === 3) {
+    } else if (filterCategoryId === "Pantry") {
       return "Your Pantry Items";
     } else if (filterCategoryId === "expiringSoon") {
       return "Expiring Soon";
@@ -267,26 +257,26 @@ export default function PantryScreen() {
         <View style={styles.filterButtons}>
           <TouchableOpacity
             style={[styles.filterButton, styles.fridgeButton]}
-            onPress={() => setFilterCategoryId(1)}
+            onPress={() => setFilterCategoryId("Fridge")}
           >
             <Text style={styles.filterText}>
-              Fridge ({countByCategory(pantryItems, 1)})
+              Fridge ({countByLocation(pantryItems, 1)})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.freezerButton]}
-            onPress={() => setFilterCategoryId(2)}
+            onPress={() => setFilterCategoryId("Freezer")}
           >
             <Text style={styles.filterText}>
-              Freezer ({countByCategory(pantryItems, 2)})
+              Freezer ({countByLocation(pantryItems, 2)})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterButton, styles.pantryButton]}
-            onPress={() => setFilterCategoryId(3)}
+            onPress={() => setFilterCategoryId("Pantry")}
           >
             <Text style={styles.filterText}>
-              Pantry ({countByCategory(pantryItems, 3)})
+              Pantry ({countByLocation(pantryItems, 3)})
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
