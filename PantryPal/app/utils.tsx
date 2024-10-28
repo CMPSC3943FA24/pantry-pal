@@ -34,11 +34,11 @@ export const filterPantryItems = (
     const matchesSearch = item.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    
+      
     // Match category or handle "expiring soon"
     const matchesCategory =
       filterCategoryId === null ||
-      filterCategoryId === item.category_id ||
+      item.category_id === Number(filterCategoryId) ||
       (filterCategoryId === "Fridge" && item.location_id === 1) ||
       (filterCategoryId === "Freezer" && item.location_id === 2) ||
       (filterCategoryId === "Pantry" && item.location_id === 3) ||

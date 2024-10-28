@@ -45,6 +45,7 @@ export default function PantryScreen() {
   const [location, setLocation] = useState<number | null>(null); // Location ID as a number
   const [modalVisible, setModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [filterCategoryModalVisible, setfilterCategoryModalVisible] = useState(false);
   const [itemName, setItemName] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [expirationDate, setExpirationDate] = useState("");
@@ -177,6 +178,15 @@ export default function PantryScreen() {
       .sort((a, b) => a.quantity - b.quantity); // Sort by quantity in ascending order
   };
   
+  const handlefilterCategoryId = () => {
+    if (selectedCategoryId === null) {
+      console.error("Please select a category.");
+      return;
+    }
+    setFilterCategoryId(selectedCategoryId);  // Set the filter to selected category ID
+    setfilterCategoryModalVisible(false);     // Close modal after setting filter
+  };
+  
   // This function sets the header title based on the current category filter
   const getHeaderTitle = () => {
     if (filterCategoryId === "Fridge") {
@@ -280,6 +290,12 @@ export default function PantryScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.filterButton, styles.filterCategoryModalButton]}
+            onPress={() => setfilterCategoryModalVisible(true)} 
+          >
+          <Text style={styles.filterText}>Category</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.filterButton, styles.expiringSoonButton]}
             onPress={() => setFilterCategoryId("expiringSoon")} // Set a special flag for expiring soon
           >
@@ -325,6 +341,39 @@ export default function PantryScreen() {
       >
         <Text style={styles.floatingButtonText}>-</Text>
       </TouchableOpacity>
+
+    {/* FilterCategory Modal */}
+    <Modal
+      animationType="slide"
+      transparent={true}
+      visible={filterCategoryModalVisible}
+    >
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <Text style={styles.modalTitle}>Filter by Category</Text>
+        <Picker
+          selectedValue={selectedCategoryId}
+          onValueChange={(itemValue) => setSelectedCategoryId(itemValue)} // Update selected category
+          style={styles.picker}
+        >
+        <Picker.Item label="Select a Category" value={null} />
+          {categories.map((category) => (
+            <Picker.Item
+              key={category.id}
+              label={category.name}
+              value={category.id}
+            />
+          ))}
+        </Picker>
+        <TouchableOpacity
+          onPress={handlefilterCategoryId}
+          style={styles.saveButton}
+        >
+          <Text style={styles.buttonText}>Enter</Text>
+        </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
 
       {/* Add Modal */}
       <Modal

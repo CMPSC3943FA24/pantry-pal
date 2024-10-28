@@ -85,6 +85,9 @@ export const styles = StyleSheet.create({
   runningLowButton: {
     backgroundColor: "#ffd966",
   },
+  filterCategoryModalButton: {
+    backgroundColor: "f07fd9",
+  },
   recentItemsContainer: {
     padding: 20,
   },
@@ -145,6 +148,9 @@ export const styles = StyleSheet.create({
   },
   expiringSoonBadge: {
     backgroundColor: "ffcc00"
+  },
+  filterCategoryModalBadge: {
+    backgroundColor: "f07fd9",
   },
   modalOverlay: {
     flex: 1,
