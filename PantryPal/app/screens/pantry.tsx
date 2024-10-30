@@ -397,12 +397,7 @@ export default function PantryScreen() {
                 <Picker.Item key={loc.id} label={loc.name} value={loc.id} />
               ))}
             </Picker>
-            <TextInput
-              placeholder="Expiration Date (YYYY-MM-DD)"
-              value={expirationDate}
-              onChangeText={setExpirationDate}
-              style={styles.input}
-            />
+            
             <TouchableOpacity onPress={showDatePicker}>
               <Text style={styles.datePickerButton}>Select Date</Text>
             </TouchableOpacity>
@@ -412,6 +407,13 @@ export default function PantryScreen() {
               onConfirm={handleDateConfirm}
               onCancel={hideDatePicker}
             />
+            <TextInput
+              placeholder="Expiration Date (YYYY-MM-DD)"
+              value={expirationDate}
+              onChangeText={setExpirationDate}
+              style={styles.input}
+            />
+
 
             <View style={styles.quantityContainer}>
               <TouchableOpacity

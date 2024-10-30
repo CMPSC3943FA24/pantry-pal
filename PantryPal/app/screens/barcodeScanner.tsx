@@ -8,6 +8,7 @@ export default function BarcodeScannerScreen() {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [scanned, setScanned] = useState(false);
   const [scannerKey, setScannerKey] = useState(0); // Use a key to force re-render
+  const [isAddingItem, setIsAddingItem] = useState<null | boolean>(null);
 
   useEffect(() => {
     const getBarCodeScannerPermissions = async () => {
@@ -62,15 +63,17 @@ export default function BarcodeScannerScreen() {
           ]
         );
       } else {
-        Alert.alert("Error", "No item found for the scanned barcode.");
+        // If searching, show item information
+        Alert.alert("Item Found", `Name: ${item.product.product_name}`);
         setScanned(false); // Allow scanning again
       }
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Failed to fetch item details.");
-      setScanned(false); // Allow scanning again
-    }
-  };
+
+  } catch (error) {
+    console.error(error);
+    Alert.alert("Error", "Failed to fetch item details.");
+    setScanned(false); // Allow scanning again
+  }
+};
 
   if (hasPermission === null) {
     return <Text>Requesting camera permission...</Text>;
@@ -83,20 +86,49 @@ export default function BarcodeScannerScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.barcodeScannerContainer}>
-        <BarCodeScanner
-          key={scannerKey} // Force re-render of the barcode scanner when the screen is refocused
-          onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={styles.barcodeScanner}
-        />
-        {scanned && (
-          <TouchableOpacity
-            onPress={() => setScanned(false)}
-            style={styles.scanButton}
-          >
-            <Text style={styles.scanButtonText}>Tap to Scan Again</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[
+            styles.button,
+            isAddingItem === true && { backgroundColor: "green" },
+          ]}
+          onPress={() => {
+            setIsAddingItem(true);
+            setScanned(false); // Reset scanned state for new scan
+          }}
+        >
+          <Text style={styles.buttonText}>Add Item</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            isAddingItem === false && { backgroundColor: "green" },
+          ]}
+          onPress={() => {
+            setIsAddingItem(false);
+            setScanned(false); // Reset scanned state for new scan
+          }}
+        >
+          <Text style={styles.buttonText}>Search Item</Text>
+        </TouchableOpacity>
       </View>
+
+      {isAddingItem !== null && (
+        <View style={styles.barcodeScannerContainer}>
+          <BarCodeScanner
+           key={scannerKey} // Force re-render of the barcode scanner when the screen is refocused
+            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+            style={styles.barcodeScanner}
+          />
+          {scanned && (
+            <TouchableOpacity
+              onPress={() => setScanned(false)}
+              style={styles.scanButton}
+            >
+              <Text style={styles.scanButtonText}>Tap to Scan Again</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
