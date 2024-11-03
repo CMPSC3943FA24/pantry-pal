@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -22,7 +22,12 @@ import {
   deletePantryItem,
 } from "../databaseService";
 import { styles } from "../styles";
-import { Link, router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import {
+  Link,
+  router,
+  useFocusEffect,
+  useLocalSearchParams,
+} from "expo-router";
 import {
   getCategoryNameById,
   filterPantryItems,
@@ -31,7 +36,7 @@ import {
   resetFormFields,
 } from "../utils";
 
-// Define the type for PantryItem
+// Data structures to represent pantry items and categories
 interface PantryItem {
   id: number;
   name: string;
@@ -41,42 +46,43 @@ interface PantryItem {
   notes: string;
 }
 
-// Define the type for Category
 interface Category {
   id: number;
   name: string;
 }
 
+// Helper function to get the first value from params, handling both arrays and single strings
 const getSingleValue = (value: string | string[] | undefined): string => {
   if (Array.isArray(value)) {
-    return value[0]; // If it's an array, take the first element
+    return value[0];
   }
-  return value || ""; // If it's a string, return the string; otherwise, return an empty string
+  return value || "";
 };
 
 export default function PantryScreen() {
-  const params = useLocalSearchParams(); // Get params from barcode scan
-  const [pantryItems, setPantryItems] = useState<PantryItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [location, setLocation] = useState<number | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const params = useLocalSearchParams(); // Retrieve navigation parameters for autofill
+  const [addModalVisible, setAddModalVisible] = useState(false); // Control state for add modal visibility
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false); // Control state for delete modal visibility
+  const [pantryItems, setPantryItems] = useState<PantryItem[]>([]); // Stores pantry items
+  const [categories, setCategories] = useState<Category[]>([]); // Stores item categories
+  const [locations, setLocations] = useState<Location[]>([]); // Stores item locations
+  const [location, setLocation] = useState<number | null>(null); // Track selected location
 
+  // Form fields for item addition
   const [itemName, setItemName] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(
+    null
+  );
   const [expirationDate, setExpirationDate] = useState("");
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState("");
-  const [itemId, setItemId] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null);
-  const [filterLocationId, setFilterLocationId] = useState<number | null>(null);
+  const [itemId, setItemId] = useState<number | null>(null); // Track ID of item to delete
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Search query
+  const [filterCategoryId, setFilterCategoryId] = useState<number | null>(null); // Category filter
+  const [filterLocationId, setFilterLocationId] = useState<number | null>(null); // Location filter
 
-  // Control flow flag
-  const [paramsProcessed, setParamsProcessed] = useState(false); // Track param processing
-
+  // Initialize database and fetch initial data on component mount
   useEffect(() => {
     const initializeData = async () => {
       console.log("Component mounted: initializing data");
@@ -85,68 +91,75 @@ export default function PantryScreen() {
       await fetchLocations();
       await fetchPantryItems();
     };
-
     initializeData();
   }, []);
 
-  // Handle navigation params
+  // Handle incoming params to auto-populate fields if available, then reset params
   useEffect(() => {
     if (
       (params?.itemName || params?.expirationDate || params?.notes) &&
-      !paramsProcessed &&
-      !modalVisible
+      !addModalVisible
     ) {
       console.log("Processing params for modal");
       setItemName(getSingleValue(params?.itemName));
       setExpirationDate(getSingleValue(params?.expirationDate));
       setNotes(getSingleValue(params?.notes));
 
-      setModalVisible(true); // Open the modal
-      setParamsProcessed(true); // Mark the params as handled
+      setAddModalVisible(true);
+      router.replace("./pantry"); // Clear params by reloading the screen without them
     }
-  }, [params, paramsProcessed, modalVisible]);
+  }, [params]);
 
+  // Fetch updated pantry items whenever the screen regains focus
   useFocusEffect(
     React.useCallback(() => {
       fetchPantryItems();
     }, [])
   );
 
+  // Retrieve pantry items from database
   const fetchPantryItems = async () => {
     const fetchedPantryItems = getPantryItems();
     console.log("Fetched pantry items:", fetchedPantryItems.length);
     setPantryItems(fetchedPantryItems);
   };
 
+  // Retrieve categories from database
   const fetchCategories = async () => {
     const fetchedCategories = getCategories();
     console.log("Categories fetched:", fetchedCategories);
     setCategories(fetchedCategories);
   };
 
+  // Retrieve item locations from database
   const fetchLocations = async () => {
     const fetchedLocations = getLocations();
     console.log("Locations fetched:", fetchedLocations);
     setLocations(fetchedLocations);
   };
 
-  const showDatePicker = () => {
-    setDatePickerVisibility(true);
-  };
+  // Memoized map for quick category name lookup
+  const categoryMap = useMemo(() => {
+    const map = new Map();
+    categories.forEach((category) => map.set(category.id, category.name));
+    return map;
+  }, [categories]);
 
-  const hideDatePicker = () => {
-    setDatePickerVisibility(false);
-  };
+  // Date picker visibility handlers
+  const showDatePicker = () => setDatePickerVisibility(true);
+  const hideDatePicker = () => setDatePickerVisibility(false);
 
+  // Handle date selection in date picker
   const handleDateConfirm = (date: Date) => {
     const formattedDate = date.toISOString().split("T")[0];
-    setExpirationDate(formattedDate); // Set the expiration date correctly
-    hideDatePicker(); // Close the date picker
+    setExpirationDate(formattedDate);
+    hideDatePicker();
   };
 
-  const closeModal = () => {
-    console.log("Closing modal");
-    setModalVisible(false);
+  // Close add modal and reset form fields
+  const closeAddModal = () => {
+    console.log("Closing add modal");
+    setAddModalVisible(false);
     resetFormFields(
       setItemName,
       setLocation,
@@ -155,12 +168,24 @@ export default function PantryScreen() {
       setQuantity,
       setNotes
     );
-    setParamsProcessed(false); // Reset param processing flag when modal is closed
-    router.setParams({}); // Clear the URL params
   };
 
+  // Close delete modal and reset selected item
+  const closeDeleteModal = () => {
+    console.log("Closing delete modal");
+    setDeleteModalVisible(false);
+    setItemId(null);
+  };
+
+  // Validate and add a new item to the pantry
   const handleAddItem = async () => {
-    if (!selectedCategoryId || !itemName || !expirationDate || quantity <= 0 || location === null) {
+    if (
+      !selectedCategoryId ||
+      !itemName ||
+      !expirationDate ||
+      quantity <= 0 ||
+      location === null
+    ) {
       console.error("Required fields are missing or invalid");
       return;
     }
@@ -168,33 +193,34 @@ export default function PantryScreen() {
     try {
       console.log("Adding item:", itemName);
       addPantryItem(
-        itemName, // 1. name
-        selectedCategoryId, // 2. category_id
-        0, // 3. brand_id placeholder
-        location, // 4. location_id
-        expirationDate, // 5. expiration_date
-        quantity, // 6. quantity
-        new Date().toISOString(), // 7. added_date
-        notes // 8. notes
+        itemName,
+        selectedCategoryId,
+        0,
+        location,
+        expirationDate,
+        quantity,
+        new Date().toISOString(),
+        notes
       );
       await fetchPantryItems();
-      closeModal(); // Close modal after adding item
+      closeAddModal();
     } catch (error) {
       console.error("Error adding item:", error);
     }
   };
 
+  // Delete an item from the pantry by ID
   const handleDeleteItem = (id: number) => {
     try {
       deletePantryItem(id);
       setPantryItems((prevItems) => prevItems.filter((item) => item.id !== id));
-      setDeleteModalVisible(false);
-      setItemId(null);
+      closeDeleteModal();
     } catch (error) {
       console.error("Error deleting item:", error);
     }
   };
 
+  // Confirmation prompt for item deletion
   const confirmDeleteItem = (id: number) => {
     Alert.alert(
       "Confirm Delete",
@@ -211,6 +237,7 @@ export default function PantryScreen() {
     );
   };
 
+  // Filter pantry items based on search query, category, and location
   const filteredItems = filterPantryItems(
     pantryItems,
     searchQuery,
@@ -218,18 +245,15 @@ export default function PantryScreen() {
     filterLocationId
   );
 
+  // Determine header title based on selected location filter
   const getHeaderTitle = () => {
-    if (filterCategoryId === 1) {
-      return "Your Fridge Items";
-    } else if (filterCategoryId === 2) {
-      return "Your Freezer Items";
-    } else if (filterCategoryId === 3) {
-      return "Your Pantry Items";
-    } else {
-      return "Your Items"; // Default when no filter is applied
-    }
+    if (filterLocationId === 1) return "Your Fridge Items";
+    if (filterLocationId === 2) return "Your Freezer Items";
+    if (filterLocationId === 3) return "Your Pantry Items";
+    return "Your Items";
   };
 
+  // Render a single pantry item, including category details
   const renderPantryItem = ({
     item,
     index,
@@ -237,7 +261,7 @@ export default function PantryScreen() {
     item: PantryItem;
     index: number;
   }) => {
-    const categoryName = getCategoryNameById(item.category_id, categories);
+    const categoryName = getCategoryNameById(item.category_id, categoryMap);
 
     return (
       <View
@@ -251,18 +275,14 @@ export default function PantryScreen() {
         <Link
           href={{
             pathname: "./itemDetail",
-            params: {
-              item: JSON.stringify(item),
-            },
+            params: { item: JSON.stringify(item) },
           }}
           style={styles.itemContentWrapper}
         >
           <View style={styles.itemContent}>
             <Text style={styles.itemName}>{item.name}</Text>
             <Text style={styles.itemDetails}>Category: {categoryName}</Text>
-            <Text style={styles.itemDetails}>
-              Quantity: {item.quantity.toString()}
-            </Text>
+            <Text style={styles.itemDetails}>Quantity: {item.quantity}</Text>
             {item.expiration_date ? (
               <Text style={styles.itemDetails}>
                 Expires on: {item.expiration_date}
@@ -272,7 +292,6 @@ export default function PantryScreen() {
             )}
           </View>
         </Link>
-
         <TouchableOpacity
           onPress={() => confirmDeleteItem(item.id)}
           style={styles.trashIcon}
@@ -285,6 +304,7 @@ export default function PantryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header with search and filter options */}
       <View style={styles.itemsHeader}>
         <TextInput
           style={styles.searchBar}
@@ -329,8 +349,8 @@ export default function PantryScreen() {
         </View>
       </View>
 
+      {/* Display header title and filtered pantry items */}
       <Text style={styles.itemsHeader}>{getHeaderTitle()}</Text>
-
       <ScrollView contentContainerStyle={styles.listContainer}>
         {filteredItems.length === 0 ? (
           <Text style={styles.noItemsText}>No items in pantry</Text>
@@ -341,13 +361,13 @@ export default function PantryScreen() {
         )}
       </ScrollView>
 
+      {/* Floating buttons to open modals for adding or deleting items */}
       <TouchableOpacity
         style={styles.floatingButtonAdd}
-        onPress={() => setModalVisible(true)}
+        onPress={() => setAddModalVisible(true)}
       >
         <Text style={styles.floatingButtonText}>+</Text>
       </TouchableOpacity>
-
       <TouchableOpacity
         style={styles.floatingButtonDelete}
         onPress={() => setDeleteModalVisible(true)}
@@ -359,8 +379,8 @@ export default function PantryScreen() {
       <Modal
         animationType="slide"
         transparent={true}
-        visible={modalVisible}
-        onRequestClose={closeModal}
+        visible={addModalVisible}
+        onRequestClose={closeAddModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -412,7 +432,6 @@ export default function PantryScreen() {
               onConfirm={handleDateConfirm}
               onCancel={hideDatePicker}
             />
-
             <View style={styles.quantityContainer}>
               <TouchableOpacity
                 onPress={() => setQuantity(Math.max(quantity - 1, 0))}
@@ -440,10 +459,16 @@ export default function PantryScreen() {
               style={styles.input}
             />
             <View style={styles.modalButtons}>
-              <TouchableOpacity onPress={closeModal} style={styles.cancelButton}>
+              <TouchableOpacity
+                onPress={closeAddModal}
+                style={styles.cancelButton}
+              >
                 <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleAddItem} style={styles.saveButton}>
+              <TouchableOpacity
+                onPress={handleAddItem}
+                style={styles.saveButton}
+              >
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
             </View>
@@ -456,7 +481,7 @@ export default function PantryScreen() {
         animationType="slide"
         transparent={true}
         visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
+        onRequestClose={closeDeleteModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -478,7 +503,7 @@ export default function PantryScreen() {
                 <Text style={styles.buttonText}>Delete</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => setDeleteModalVisible(false)}
+                onPress={closeDeleteModal}
                 style={styles.cancelButton}
               >
                 <Text style={styles.buttonText}>Cancel</Text>

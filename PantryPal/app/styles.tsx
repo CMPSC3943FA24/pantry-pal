@@ -313,4 +313,15 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 10,
   },
+  backButtonContainer: {
+    padding: 10,
+    position: "absolute",
+    top: 20,
+    left: 20,
+    zIndex: 1, // Ensures the button is always on top
+  },
+  backIcon: {
+    color: "black", // Customize color if desired
+    fontSize: 24,
+  },
 });

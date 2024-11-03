@@ -9,9 +9,13 @@ export interface Category {
 // Utility function to get category name by ID
 export const getCategoryNameById = (
   categoryId: number,
-  categories: Category[]
+  categories: Category[] | Map<number, string>
 ): string => {
   console.log("Looking for category with ID:", categoryId); // Debugging
+
+  if (categories instanceof Map) {
+    return categories.get(categoryId) || "Unknown Category";
+  }
 
   const category = categories.find((cat) => cat.id === categoryId);
   return category ? category.name : "Unknown Category";
@@ -47,7 +51,6 @@ export const filterPantryItems = (
   return filteredItems;
 };
 
-
 // Utility function for handling search input change
 export const handleSearch = (
   query: string,
@@ -63,9 +66,8 @@ export const countByCategory = (items: any[], categoryId: number) => {
 
 // Utility function to count items by location
 export const countByLocation = (items: any[], locationId: number): number => {
-  return items.filter(item => item.location_id === locationId).length;
+  return items.filter((item) => item.location_id === locationId).length;
 };
-
 
 // Utility function for resetting form fields
 export const resetFormFields = (

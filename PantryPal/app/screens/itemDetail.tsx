@@ -7,6 +7,7 @@ import {
   BackHandler,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import Icon from "react-native-vector-icons/FontAwesome"; // Import FontAwesome for the arrow icon
 import { styles } from "../styles";
 import { Category, getCategoryNameById } from "../utils"; // Import the utility function
 import { getCategories } from "../databaseService"; // Assume categories are coming from here
@@ -64,12 +65,17 @@ export default function ItemDetail() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Back button explicitly navigating to the pantry screen */}
+      {/* Back button with an icon instead of text */}
       <TouchableOpacity
-        onPress={() => router.push("./pantry")} // Explicit navigation to the pantry screen
-        style={styles.backButton}
+        onPress={() => router.push("./pantry")} // Navigate back to the pantry screen
+        style={styles.backButtonContainer}
       >
-        <Text style={styles.backButtonText}>Back to Pantry</Text>
+        <Icon
+          name="arrow-left"
+          size={24}
+          color="black"
+          style={styles.backIcon}
+        />
       </TouchableOpacity>
 
       {/* Item details display */}
@@ -77,7 +83,6 @@ export default function ItemDetail() {
         <Text style={styles.itemsHeader}>{parsedItem.name}</Text>
         <Text style={styles.itemDetails}>
           Category: {categoryName || "Unknown Category"}{" "}
-          {/* Display category name */}
         </Text>
         <Text style={styles.itemDetails}>Quantity: {parsedItem.quantity}</Text>
         {parsedItem.expiration_date ? (

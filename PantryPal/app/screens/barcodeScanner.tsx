@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Text, View, TouchableOpacity, Alert, SafeAreaView } from "react-native";
+import {
+  Text,
+  View,
+  TouchableOpacity,
+  Alert,
+  SafeAreaView,
+} from "react-native";
 import { BarCodeScanner } from "expo-barcode-scanner";
 import { styles } from "../styles";
 import { router, useFocusEffect } from "expo-router";
@@ -26,12 +32,20 @@ export default function BarcodeScannerScreen() {
     }, [])
   );
 
-  const handleBarCodeScanned = async ({ type, data }: { type: string; data: string }) => {
+  const handleBarCodeScanned = async ({
+    type,
+    data,
+  }: {
+    type: string;
+    data: string;
+  }) => {
     if (scanned) return; // Prevent multiple scans in rapid succession
     setScanned(true); // Set the scanned state to prevent further scans
 
     try {
-      const response = await fetch(`https://world.openfoodfacts.org/api/v0/product/${data}.json`);
+      const response = await fetch(
+        `https://world.openfoodfacts.org/api/v0/product/${data}.json`
+      );
       const item = await response.json();
 
       if (item && item.product) {
@@ -54,7 +68,8 @@ export default function BarcodeScannerScreen() {
                   params: {
                     itemName: item.product.product_name,
                     expirationDate: item.product.expiration_date || "",
-                    notes: item.product.ingredients_text || "No notes available",
+                    notes:
+                      item.product.ingredients_text || "No notes available",
                   },
                 });
               },
